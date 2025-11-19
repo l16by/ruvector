@@ -725,7 +725,7 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("input".to_string(), "string".to_string());
 
-        let skill_id = db.create_skill(
+        let _skill_id = db.create_skill(
             "Parse JSON".to_string(),
             "Parse JSON from string".to_string(),
             params,
@@ -742,7 +742,7 @@ mod tests {
     fn test_causal_edge() -> Result<()> {
         let db = create_test_db()?;
 
-        let edge_id = db.add_causal_edge(
+        let _edge_id = db.add_causal_edge(
             vec!["rain".to_string()],
             vec!["wet ground".to_string()],
             0.95,

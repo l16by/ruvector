@@ -50,12 +50,3 @@ wasm-bindgen-test = "0.3"
 [features]
 default = []
 simd = ["ruvector-core/simd"]
-
-[profile.release]
-opt-level = "z"
-lto = true
-codegen-units = 1
-panic = "abort"
-
-[profile.release.package."*"]
-opt-level = "z"

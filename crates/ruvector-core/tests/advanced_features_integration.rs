@@ -5,7 +5,9 @@
 
 use ruvector_core::advanced_features::*;
 use ruvector_core::types::{DistanceMetric, SearchResult};
-use ruvector_core::{Result, RuvectorError};
+use ruvector_core::Result;
+use ruvector_core::advanced_features::hybrid_search::NormalizationStrategy;
+use ruvector_core::advanced_features::conformal_prediction::NonconformityMeasure;
 use std::collections::HashMap;
 
 // Helper function to generate random vectors

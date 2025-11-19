@@ -8,15 +8,15 @@
 //! - Cross-system performance comparison
 //! - CPU and memory profiling with flamegraphs
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use rand::Rng;
 use rand_distr::{Distribution, Normal, Uniform};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::{self, File};
-use std::io::{BufReader, BufWriter, Write};
+use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 /// Benchmark result for a single test
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -270,7 +270,7 @@ impl MemoryProfiler {
     }
 
     pub fn system_memory_info() -> Result<(u64, u64)> {
-        use sysinfo::{System, SystemExt};
+        use sysinfo::System;
         let mut sys = System::new_all();
         sys.refresh_all();
         let total = sys.total_memory();
