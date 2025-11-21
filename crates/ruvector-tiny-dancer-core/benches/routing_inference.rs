@@ -1,6 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
 use ruvector_tiny_dancer_core::{
-    Router, RouterConfig, RoutingRequest, Candidate,
+    Router,
+    types::{RouterConfig, RoutingRequest, Candidate},
 };
 use std::collections::HashMap;
 

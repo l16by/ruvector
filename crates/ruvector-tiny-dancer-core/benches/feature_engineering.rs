@@ -10,11 +10,11 @@ fn bench_cosine_similarity(c: &mut Criterion) {
 
     c.bench_function("cosine_similarity_384d", |b| {
         let a = vec![0.5; 384];
-        let b = vec![0.4; 384];
+        let b_vec = vec![0.4; 384];
 
         let candidate = Candidate {
             id: "test".to_string(),
-            embedding: b.clone(),
+            embedding: b_vec.clone(),
             metadata: HashMap::new(),
             created_at: chrono::Utc::now().timestamp(),
             access_count: 10,
@@ -55,18 +55,18 @@ fn bench_feature_weights(c: &mut Criterion) {
     ];
 
     for (name, config) in configs {
-        group.bench_function(name, |b| {
-            let engineer = FeatureEngineer::with_config(config);
-            let query = vec![0.5; 128];
-            let candidate = Candidate {
-                id: "test".to_string(),
-                embedding: vec![0.4; 128],
-                metadata: HashMap::new(),
-                created_at: chrono::Utc::now().timestamp(),
-                access_count: 100,
-                success_rate: 0.95,
-            };
+        let engineer = FeatureEngineer::with_config(config.clone());
+        let query = vec![0.5; 128];
+        let candidate = Candidate {
+            id: "test".to_string(),
+            embedding: vec![0.4; 128],
+            metadata: HashMap::new(),
+            created_at: chrono::Utc::now().timestamp(),
+            access_count: 100,
+            success_rate: 0.95,
+        };
 
+        group.bench_function(name, |b| {
             b.iter(|| {
                 engineer.extract_features(
                     black_box(&query),
