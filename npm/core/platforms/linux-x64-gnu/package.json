@@ -1,0 +1,29 @@
+{
+  "name": "@ruvector/core-linux-x64-gnu",
+  "version": "0.1.1",
+  "description": "Linux x64 GNU native binding for @ruvector/core",
+  "main": "index.node",
+  "type": "commonjs",
+  "os": ["linux"],
+  "cpu": ["x64"],
+  "engines": {
+    "node": ">= 18"
+  },
+  "files": [
+    "index.node"
+  ],
+  "keywords": [
+    "ruvector",
+    "vector",
+    "database",
+    "native",
+    "napi",
+    "rust"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/ruvector.git",
+    "directory": "npm/core/platforms/linux-x64-gnu"
+  }
+}

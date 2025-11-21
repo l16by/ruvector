@@ -1,0 +1,45 @@
+{
+  "name": "@ruvector/core",
+  "version": "0.1.1",
+  "description": "Native NAPI bindings for Ruvector vector database",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/ruvector.git",
+    "directory": "npm/packages/core"
+  },
+  "license": "MIT",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "scripts": {
+    "build:napi": "napi build --platform --release --cargo-cwd ../../../crates/ruvector-node --output-dir ./native",
+    "test": "node test.js",
+    "publish:platforms": "node scripts/publish-platforms.js"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^2.18.0"
+  },
+  "optionalDependencies": {
+    "@ruvector/core-linux-x64": "0.1.1",
+    "@ruvector/core-linux-arm64": "0.1.1",
+    "@ruvector/core-darwin-x64": "0.1.1",
+    "@ruvector/core-darwin-arm64": "0.1.1",
+    "@ruvector/core-win32-x64": "0.1.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "vector",
+    "database",
+    "similarity-search",
+    "hnsw",
+    "native",
+    "napi",
+    "rust"
+  ]
+}

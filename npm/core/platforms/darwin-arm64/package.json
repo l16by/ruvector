@@ -1,0 +1,29 @@
+{
+  "name": "@ruvector/core-darwin-arm64",
+  "version": "0.1.1",
+  "description": "macOS ARM64 (Apple Silicon) native binding for @ruvector/core",
+  "main": "index.node",
+  "type": "commonjs",
+  "os": ["darwin"],
+  "cpu": ["arm64"],
+  "engines": {
+    "node": ">= 18"
+  },
+  "files": [
+    "index.node"
+  ],
+  "keywords": [
+    "ruvector",
+    "vector",
+    "database",
+    "native",
+    "napi",
+    "rust"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/ruvector.git",
+    "directory": "npm/core/platforms/darwin-arm64"
+  }
+}

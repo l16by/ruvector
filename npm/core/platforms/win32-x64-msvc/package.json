@@ -1,0 +1,29 @@
+{
+  "name": "@ruvector/core-win32-x64-msvc",
+  "version": "0.1.1",
+  "description": "Windows x64 MSVC native binding for @ruvector/core",
+  "main": "index.node",
+  "type": "commonjs",
+  "os": ["win32"],
+  "cpu": ["x64"],
+  "engines": {
+    "node": ">= 18"
+  },
+  "files": [
+    "index.node"
+  ],
+  "keywords": [
+    "ruvector",
+    "vector",
+    "database",
+    "native",
+    "napi",
+    "rust"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruvnet/ruvector.git",
+    "directory": "npm/core/platforms/win32-x64-msvc"
+  }
+}
