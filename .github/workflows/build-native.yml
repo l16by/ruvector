@@ -83,7 +83,7 @@ jobs:
       - name: Install dependencies
         if: steps.check_crates.outputs.exists == 'true'
         working-directory: npm
-        run: npm ci
+        run: npm install
 
       - name: Build native module
         if: steps.check_crates.outputs.exists == 'true'
@@ -195,7 +195,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: npm
-        run: npm ci
+        run: npm install
 
       - name: Publish platform packages
         working-directory: npm/packages/core
