@@ -1600,6 +1600,1020 @@ declare class StreamingOptimization {
 declare function runStreamingOptimizationExample(): Promise<StreamingOptimizationResult>;
 
 /**
+ * 2026 US Midterm Election Simulation Types
+ *
+ * Comprehensive type definitions for state-of-the-art election modeling
+ */
+/**
+ * US State information
+ */
+interface USState {
+    name: string;
+    abbreviation: string;
+    electoralVotes: number;
+    population: number;
+    region: 'Northeast' | 'South' | 'Midwest' | 'West';
+    senateRace: boolean;
+    governorRace: boolean;
+}
+/**
+ * Demographic factors influencing elections
+ */
+interface Demographics {
+    medianAge: number;
+    collegeEducation: number;
+    urbanization: number;
+    raceEthnicity: {
+        white: number;
+        black: number;
+        hispanic: number;
+        asian: number;
+        other: number;
+    };
+    medianIncome: number;
+}
+/**
+ * Economic indicators
+ */
+interface EconomicIndicators {
+    unemploymentRate: number;
+    gdpGrowth: number;
+    inflationRate: number;
+    consumerConfidence: number;
+    gasPrice: number;
+    housingAffordability: number;
+}
+/**
+ * Polling data
+ */
+interface PollingData {
+    democraticSupport: number;
+    republicanSupport: number;
+    independentSupport: number;
+    undecided: number;
+    marginOfError: number;
+    sampleSize: number;
+    pollDate: string;
+    pollster: string;
+    quality: 'A+' | 'A' | 'A-' | 'B+' | 'B' | 'B-' | 'C+' | 'C' | 'C-';
+}
+/**
+ * Historical election results
+ */
+interface HistoricalResults {
+    year: number;
+    democraticVote: number;
+    republicanVote: number;
+    thirdPartyVote: number;
+    turnout: number;
+    winner: 'D' | 'R' | 'I';
+}
+/**
+ * Current political environment
+ */
+interface PoliticalEnvironment {
+    presidentialApproval: number;
+    congressionalApproval: number;
+    genericBallot: {
+        democratic: number;
+        republican: number;
+    };
+    rightDirection: number;
+    partisanLean: 'D+' | 'R+' | 'EVEN';
+    leanMargin: number;
+}
+/**
+ * Campaign factors
+ */
+interface CampaignFactors {
+    democraticFunding: number;
+    republicanFunding: number;
+    democraticQuality: number;
+    republicanQuality: number;
+    incumbentParty: 'D' | 'R' | 'NONE';
+    competitiveness: 'SAFE_D' | 'LIKELY_D' | 'LEAN_D' | 'TOSSUP' | 'LEAN_R' | 'LIKELY_R' | 'SAFE_R';
+}
+/**
+ * Complete state election data for simulation
+ */
+interface StateElectionData {
+    state: USState;
+    demographics: Demographics;
+    economics: EconomicIndicators;
+    polling: PollingData[];
+    historical: HistoricalResults[];
+    environment: PoliticalEnvironment;
+    campaign: CampaignFactors;
+    timestamp: string;
+}
+/**
+ * Single simulation result
+ */
+interface SimulationResult {
+    simulationId: number;
+    state: string;
+    race: 'Senate' | 'Governor' | 'House';
+    winner: 'D' | 'R' | 'I';
+    margin: number;
+    turnout: number;
+    democraticVote: number;
+    republicanVote: number;
+    thirdPartyVote: number;
+    uncertainty: number;
+    keyFactors: string[];
+}
+/**
+ * Aggregated results across all simulations for a state
+ */
+interface StateAggregateResults {
+    state: string;
+    totalSimulations: number;
+    democraticWins: number;
+    republicanWins: number;
+    independentWins: number;
+    averageMargin: number;
+    medianMargin: number;
+    averageTurnout: number;
+    winProbability: {
+        democratic: number;
+        republican: number;
+        independent: number;
+    };
+    confidence: number;
+    trendDirection: 'D' | 'R' | 'STABLE';
+    competitiveScore: number;
+}
+/**
+ * National aggregate results
+ */
+interface NationalResults {
+    senate: {
+        currentSeats: {
+            D: number;
+            R: number;
+            I: number;
+        };
+        projectedSeats: {
+            D: number;
+            R: number;
+            I: number;
+        };
+        netChange: {
+            D: number;
+            R: number;
+            I: number;
+        };
+        probabilityControl: {
+            D: number;
+            R: number;
+        };
+    };
+    governors: {
+        currentSeats: {
+            D: number;
+            R: number;
+            I: number;
+        };
+        projectedSeats: {
+            D: number;
+            R: number;
+            I: number;
+        };
+        netChange: {
+            D: number;
+            R: number;
+            I: number;
+        };
+    };
+    house: {
+        currentSeats: {
+            D: number;
+            R: number;
+            I: number;
+        };
+        projectedSeats: {
+            D: number;
+            R: number;
+            I: number;
+        };
+        netChange: {
+            D: number;
+            R: number;
+            I: number;
+        };
+        probabilityControl: {
+            D: number;
+            R: number;
+        };
+    };
+    timestamp: string;
+    confidence: number;
+    totalSimulations: number;
+}
+/**
+ * Self-learning metrics for election optimization
+ */
+interface ElectionLearningMetrics {
+    iteration: number;
+    accuracy: number;
+    rmse: number;
+    calibration: number;
+    resolution: number;
+    brier: number;
+    logLoss: number;
+    improvements: {
+        fromPrevious: number;
+        fromBaseline: number;
+    };
+}
+/**
+ * Model performance comparison
+ */
+interface ModelPerformance {
+    modelName: string;
+    totalSimulations: number;
+    averageAccuracy: number;
+    averageSpeed: number;
+    averageQuality: number;
+    costEfficiency: number;
+    bestFor: string[];
+}
+/**
+ * Complete simulation configuration
+ */
+interface SimulationConfig {
+    states: string[];
+    simulationsPerState: number;
+    races: ('Senate' | 'Governor' | 'House')[];
+    models: ('gemini' | 'claude' | 'kimi')[];
+    enableSelfLearning: boolean;
+    enableSwarmOptimization: boolean;
+    enableStreaming: boolean;
+    historicalValidation: boolean;
+    uncertaintyQuantification: boolean;
+    parallelProcessing: boolean;
+    maxParallelStates: number;
+}
+/**
+ * Simulation progress for real-time updates
+ */
+interface SimulationProgress {
+    currentState: string;
+    statesCompleted: number;
+    totalStates: number;
+    simulationsCompleted: number;
+    totalSimulations: number;
+    percentComplete: number;
+    estimatedTimeRemaining: number;
+    currentModel: string;
+    averageSimulationTime: number;
+    status: 'initializing' | 'running' | 'optimizing' | 'complete' | 'error';
+}
+/**
+ * Scenario analysis
+ */
+interface ScenarioAnalysis {
+    name: string;
+    description: string;
+    assumptions: Record<string, any>;
+    results: NationalResults;
+    probability: number;
+}
+/**
+ * Sensitivity analysis
+ */
+interface SensitivityAnalysis {
+    factor: string;
+    baselineValue: number;
+    variations: {
+        value: number;
+        impact: number;
+        confidence: number;
+    }[];
+}
+
+/**
+ * 2026 US Midterm Election Simulator
+ *
+ * State-of-the-art election modeling with:
+ * - 1000+ Monte Carlo simulations per state
+ * - Self-learning optimization
+ * - Multi-model benchmarking
+ * - Swarm-coordinated parallel processing
+ * - Real-time streaming results
+ */
+
+/**
+ * Main Election Simulator Class
+ */
+declare class ElectionSimulator {
+    private config;
+    private generators;
+    private progress;
+    private learningMetrics;
+    private modelPerformance;
+    constructor(config?: Partial<SimulationConfig>);
+    /**
+     * Display banner
+     */
+    private banner;
+    /**
+     * Progress bar
+     */
+    private progressBar;
+    /**
+     * Initialize AI generators for all configured models
+     */
+    initializeGenerators(apiKeys: Record<string, string>): Promise<void>;
+    /**
+     * Generate realistic state election data schema
+     */
+    private getStateDataSchema;
+    /**
+     * Run simulations for a single state
+     */
+    simulateState(stateAbbr: string, modelKey: string, iterations: number): Promise<SimulationResult[]>;
+    /**
+     * Identify key factors influencing election outcome
+     */
+    private identifyKeyFactors;
+    /**
+     * Aggregate results for a state
+     */
+    private aggregateStateResults;
+    /**
+     * Run complete election simulation
+     */
+    run(apiKeys?: Record<string, string>): Promise<{
+        stateResults: Record<string, StateAggregateResults>;
+        nationalResults: NationalResults;
+        learningMetrics: ElectionLearningMetrics[];
+        modelPerformance: Record<string, ModelPerformance>;
+    }>;
+    /**
+     * Calculate national aggregate results
+     */
+    private calculateNationalResults;
+    /**
+     * Display final results
+     */
+    private displayFinalResults;
+}
+/**
+ * Quick start function for running election simulation
+ */
+declare function runElectionSimulation(options: {
+    states?: string[];
+    simulationsPerState?: number;
+    models?: ('gemini' | 'claude' | 'kimi')[];
+    enableSelfLearning?: boolean;
+}): Promise<{
+    stateResults: Record<string, StateAggregateResults>;
+    nationalResults: NationalResults;
+    learningMetrics: ElectionLearningMetrics[];
+    modelPerformance: Record<string, ModelPerformance>;
+}>;
+
+/**
+ * US State data for 2026 Midterm Elections
+ */
+
+/**
+ * All 50 US states with 2026 election information
+ * Based on actual 2026 election calendar
+ */
+declare const US_STATES: USState[];
+/**
+ * Get states with Senate races in 2026
+ */
+declare function getSenateRaceStates(): USState[];
+/**
+ * Get states with Governor races in 2026
+ */
+declare function getGovernorRaceStates(): USState[];
+/**
+ * Get competitive states (battlegrounds) based on recent history
+ */
+declare function getCompetitiveStates(): USState[];
+/**
+ * Get state by abbreviation
+ */
+declare function getStateByAbbr(abbr: string): USState | undefined;
+/**
+ * Get states by region
+ */
+declare function getStatesByRegion(region: 'Northeast' | 'South' | 'Midwest' | 'West'): USState[];
+
+/**
+ * Election Fraud Detection System
+ *
+ * Statistical anomaly detection and fraud analysis for election results
+ * - Benford's Law analysis
+ * - Turnout anomaly detection
+ * - Geographic clustering analysis
+ * - Timestamp irregularities
+ * - Vote swing analysis
+ */
+/**
+ * Fraud detection alert
+ */
+interface FraudAlert {
+    alertId: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    type: 'benford' | 'turnout' | 'geographic' | 'timestamp' | 'swing' | 'statistical';
+    location: string;
+    description: string;
+    anomalyScore: number;
+    timestamp: string;
+    evidence: {
+        metric: string;
+        expectedValue: number;
+        actualValue: number;
+        deviation: number;
+    }[];
+    recommendations: string[];
+}
+/**
+ * Vote count data for fraud analysis
+ */
+interface VoteCountData {
+    location: string;
+    timestamp: string;
+    totalVotes: number;
+    democraticVotes: number;
+    republicanVotes: number;
+    otherVotes: number;
+    registeredVoters: number;
+    precinctReporting: number;
+    votesByHour?: Record<string, number>;
+    earlyVotes?: number;
+    electionDayVotes?: number;
+}
+/**
+ * Benford's Law analysis result
+ */
+interface BenfordAnalysis {
+    location: string;
+    digitPosition: 1 | 2;
+    expectedDistribution: number[];
+    actualDistribution: number[];
+    chiSquare: number;
+    pValue: number;
+    passesTest: boolean;
+    suspicionLevel: 'none' | 'low' | 'medium' | 'high';
+}
+/**
+ * Turnout anomaly detection
+ */
+interface TurnoutAnomaly {
+    location: string;
+    actualTurnout: number;
+    expectedTurnout: number;
+    historicalAverage: number;
+    standardDeviations: number;
+    isAnomalous: boolean;
+    suspicionLevel: 'none' | 'low' | 'medium' | 'high';
+}
+/**
+ * Main Fraud Detection Engine
+ */
+declare class FraudDetectionEngine {
+    private alerts;
+    private analysisResults;
+    /**
+     * Benford's Law Analysis
+     * First digit distribution should follow logarithmic pattern
+     */
+    benfordsLawAnalysis(voteCounts: VoteCountData[]): BenfordAnalysis[];
+    /**
+     * Turnout Anomaly Detection
+     * Detect unusual turnout patterns
+     */
+    detectTurnoutAnomalies(current: VoteCountData[], historical: VoteCountData[]): TurnoutAnomaly[];
+    /**
+     * Geographic Clustering Analysis
+     * Detect unusual patterns in adjacent areas
+     */
+    detectGeographicAnomalies(voteCounts: VoteCountData[], adjacencyMap: Map<string, string[]>): FraudAlert[];
+    /**
+     * Timestamp Irregularity Detection
+     * Detect suspicious vote dumps or timing patterns
+     */
+    detectTimestampIrregularities(voteCounts: VoteCountData[]): FraudAlert[];
+    /**
+     * Vote Swing Analysis
+     * Detect unrealistic partisan shifts
+     */
+    analyzeVoteSwings(current: VoteCountData[], previous: VoteCountData[]): FraudAlert[];
+    /**
+     * Get all fraud alerts
+     */
+    getAlerts(minSeverity?: 'low' | 'medium' | 'high' | 'critical'): FraudAlert[];
+    /**
+     * Generate comprehensive fraud report
+     */
+    generateFraudReport(): {
+        totalAlerts: number;
+        bySeverity: Record<string, number>;
+        byType: Record<string, number>;
+        highRiskLocations: string[];
+        overallRiskScore: number;
+        recommendations: string[];
+    };
+    private generateAlert;
+    private groupByLocation;
+    private extractFirstDigits;
+    private calculateDistribution;
+    private calculateChiSquare;
+    private chiSquarePValue;
+    private getSuspicionLevel;
+    private getTurnoutSuspicionLevel;
+    private calculateMargin;
+    private mean;
+    private standardDeviation;
+    private generateRecommendations;
+}
+
+/**
+ * Real-Time Election Monitoring System
+ *
+ * Live vote tracking, result streaming, and race calling
+ * - County-by-county live results
+ * - Real-time probability updates
+ * - Early vs election day vote analysis
+ * - Race calling logic
+ * - Streaming dashboards
+ */
+/**
+ * Live vote count update
+ */
+interface LiveVoteUpdate {
+    timestamp: string;
+    location: string;
+    level: 'state' | 'county' | 'precinct';
+    totalVotes: number;
+    democraticVotes: number;
+    republicanVotes: number;
+    otherVotes: number;
+    precinctsReporting: number;
+    totalPrecincts: number;
+    reportingPercentage: number;
+    estimatedRemaining: number;
+}
+/**
+ * Real-time race status
+ */
+interface RaceStatus {
+    state: string;
+    race: 'Senate' | 'Governor' | 'House';
+    status: 'too_early' | 'too_close' | 'leaning_dem' | 'leaning_rep' | 'called_dem' | 'called_rep';
+    confidence: number;
+    winProbability: {
+        democratic: number;
+        republican: number;
+    };
+    currentMargin: number;
+    votesRemaining: number;
+    reportingPercentage: number;
+    lastUpdate: string;
+    projectedWinner?: 'D' | 'R';
+    timeOfCall?: string;
+}
+/**
+ * County-level results
+ */
+interface CountyResult {
+    county: string;
+    state: string;
+    totalVotes: number;
+    democraticVotes: number;
+    republicanVotes: number;
+    margin: number;
+    turnout: number;
+    reportingPercentage: number;
+    lastUpdate: string;
+}
+/**
+ * Vote type breakdown (early vs election day)
+ */
+interface VoteTypeAnalysis {
+    location: string;
+    earlyVotes: {
+        total: number;
+        democratic: number;
+        republican: number;
+        margin: number;
+    };
+    electionDayVotes: {
+        total: number;
+        democratic: number;
+        republican: number;
+        margin: number;
+    };
+    comparison: {
+        earlyMargin: number;
+        electionDayMargin: number;
+        shift: number;
+    };
+}
+/**
+ * Live projection with uncertainty
+ */
+interface LiveProjection {
+    state: string;
+    timestamp: string;
+    votesIn: number;
+    votesRemaining: number;
+    reportingPercentage: number;
+    currentResults: {
+        democratic: number;
+        republican: number;
+        margin: number;
+    };
+    projection: {
+        democraticTotal: number;
+        republicanTotal: number;
+        margin: number;
+        winProbability: {
+            democratic: number;
+            republican: number;
+        };
+    };
+    uncertainty: {
+        marginError: number;
+        volatilityScore: number;
+    };
+}
+/**
+ * Main Real-Time Monitoring Engine
+ */
+declare class RealTimeMonitor {
+    private voteUpdates;
+    private raceStatuses;
+    private countyResults;
+    private updateCallbacks;
+    /**
+     * Subscribe to live updates
+     */
+    subscribe(callback: (update: LiveVoteUpdate) => void): () => void;
+    /**
+     * Process incoming vote update
+     */
+    processVoteUpdate(update: LiveVoteUpdate): void;
+    /**
+     * Update race status based on latest data
+     */
+    private updateRaceStatus;
+    /**
+     * Calculate live projection with uncertainty
+     */
+    calculateLiveProjection(update: LiveVoteUpdate): LiveProjection;
+    /**
+     * Analyze early vs election day voting patterns
+     */
+    analyzeVoteTypes(state: string, earlyVotes: LiveVoteUpdate, electionDayVotes: LiveVoteUpdate): VoteTypeAnalysis;
+    /**
+     * Get current race status
+     */
+    getRaceStatus(state: string, race?: 'Senate' | 'Governor' | 'House'): RaceStatus | undefined;
+    /**
+     * Get all race statuses
+     */
+    getAllRaceStatuses(): RaceStatus[];
+    /**
+     * Get called races
+     */
+    getCalledRaces(): RaceStatus[];
+    /**
+     * Get uncalled races
+     */
+    getUncalledRaces(): RaceStatus[];
+    /**
+     * Generate live dashboard data
+     */
+    generateDashboard(): {
+        timestamp: string;
+        totalRaces: number;
+        calledRaces: number;
+        uncalledRaces: number;
+        nationalProjection: {
+            democraticSeats: number;
+            republicanSeats: number;
+            tossups: number;
+            controlProbability: {
+                D: number;
+                R: number;
+            };
+        };
+        topCompetitiveRaces: RaceStatus[];
+        recentUpdates: LiveVoteUpdate[];
+    };
+    private determineRaceStatus;
+    private shouldCallRace;
+    private calculateMarginError;
+    private calculateVolatility;
+    private normalCDF;
+}
+/**
+ * Create a live streaming dashboard
+ */
+declare function createLiveDashboard(monitor: RealTimeMonitor): void;
+
+/**
+ * Granular Voter Profile Modeling System
+ *
+ * Enables multi-level voter modeling from broad demographic aggregates
+ * down to individual voter profiles with sub-personas based on grounding data.
+ *
+ * Resource allocation scales with granularity level:
+ * - STATE: 1x resources (broad demographic aggregates)
+ * - COUNTY: 10x resources (county-level demographics)
+ * - PRECINCT: 50x resources (precinct-level voter patterns)
+ * - DEMOGRAPHIC_CLUSTER: 100x resources (demographic group personas)
+ * - INDIVIDUAL: 500x resources (individual voter profiles with sub-personas)
+ */
+
+/**
+ * Granularity levels for voter modeling
+ */
+declare enum GranularityLevel {
+    /** State-level aggregates (lowest resource cost, broadest modeling) */
+    STATE = "STATE",
+    /** County-level demographics and voting patterns */
+    COUNTY = "COUNTY",
+    /** Precinct-level voter behavior */
+    PRECINCT = "PRECINCT",
+    /** Demographic cluster personas (age/race/education/income groups) */
+    DEMOGRAPHIC_CLUSTER = "DEMOGRAPHIC_CLUSTER",
+    /** Individual voter profiles with sub-personas (highest resource cost, finest modeling) */
+    INDIVIDUAL = "INDIVIDUAL"
+}
+/**
+ * Resource requirements for each granularity level
+ */
+interface GranularityResourceRequirements {
+    level: GranularityLevel;
+    /** Relative computational cost (1x = STATE baseline) */
+    computationalCost: number;
+    /** Number of AI model calls required */
+    modelCalls: number;
+    /** Estimated memory usage in MB */
+    memoryUsageMB: number;
+    /** Estimated execution time in seconds */
+    estimatedTimeSeconds: number;
+    /** Number of profiles/personas generated */
+    profileCount: number;
+}
+/**
+ * Configuration for granular modeling
+ */
+interface GranularityConfig {
+    /** Target granularity level */
+    level: GranularityLevel;
+    /** Resource allocation strategy */
+    resourceStrategy: 'balanced' | 'speed' | 'accuracy' | 'cost_optimized';
+    /** Enable sub-persona generation for individuals */
+    enableSubPersonas: boolean;
+    /** Maximum number of sub-personas per individual */
+    maxSubPersonas: number;
+    /** Use grounding data for persona refinement */
+    useGroundingData: boolean;
+    /** Grounding data sources */
+    groundingDataSources?: GroundingDataSource[];
+    /** Enable swarm coordination for parallel processing */
+    enableSwarmCoordination: boolean;
+    /** Number of parallel agents for swarm processing */
+    swarmAgentCount: number;
+}
+/**
+ * Grounding data sources for persona refinement
+ */
+interface GroundingDataSource {
+    type: 'census' | 'polling' | 'consumer_data' | 'social_media' | 'voter_file' | 'survey';
+    name: string;
+    coverage: number;
+    recency: string;
+    reliability: number;
+    fields: string[];
+}
+/**
+ * Individual voter profile with sub-personas
+ */
+interface VoterProfile {
+    /** Unique voter identifier */
+    voterId: string;
+    /** Geographic identifiers */
+    geography: {
+        state: string;
+        county: string;
+        precinct: string;
+        zipCode: string;
+    };
+    /** Core demographics */
+    demographics: Demographics;
+    /** Economic situation */
+    economics: EconomicIndicators;
+    /** Political orientation */
+    political: PoliticalEnvironment & {
+        registeredParty: 'D' | 'R' | 'I' | 'NPA';
+        voteHistory: VoteHistory[];
+        issuePositions: IssuePosition[];
+    };
+    /** Behavioral patterns */
+    behavior: {
+        turnoutProbability: number;
+        persuadability: number;
+        informationSources: string[];
+        socialInfluence: number;
+    };
+    /** Sub-personas representing different aspects of decision-making */
+    subPersonas?: SubPersona[];
+    /** Grounding data used for this profile */
+    groundingData?: Record<string, any>;
+    /** Confidence score for profile accuracy */
+    confidence: number;
+}
+/**
+ * Voting history record
+ */
+interface VoteHistory {
+    year: number;
+    election: 'primary' | 'general' | 'special';
+    participated: boolean;
+    method?: 'in_person' | 'absentee' | 'early';
+}
+/**
+ * Issue position
+ */
+interface IssuePosition {
+    issue: string;
+    position: number;
+    salience: number;
+    volatility: number;
+}
+/**
+ * Sub-persona representing a facet of voter identity
+ */
+interface SubPersona {
+    /** Persona identifier */
+    personaId: string;
+    /** Persona type */
+    type: 'economic' | 'cultural' | 'partisan' | 'issue_based' | 'identity';
+    /** Persona description */
+    description: string;
+    /** Weight in decision-making (0-1) */
+    weight: number;
+    /** Key motivations */
+    motivations: string[];
+    /** Key concerns */
+    concerns: string[];
+    /** Voting tendency for this persona */
+    voteTendency: {
+        democratic: number;
+        republican: number;
+        independent: number;
+    };
+    /** Contextual triggers that activate this persona */
+    triggers: string[];
+}
+/**
+ * Demographic cluster (aggregated voter personas)
+ */
+interface DemographicCluster {
+    clusterId: string;
+    name: string;
+    description: string;
+    /** Number of voters in cluster */
+    size: number;
+    /** Cluster characteristics */
+    characteristics: {
+        demographics: Partial<Demographics>;
+        economics: Partial<EconomicIndicators>;
+        political: Partial<PoliticalEnvironment>;
+    };
+    /** Representative personas */
+    personas: SubPersona[];
+    /** Voting behavior patterns */
+    votingBehavior: {
+        turnoutRate: number;
+        partisanLean: number;
+        volatility: number;
+        keyIssues: string[];
+    };
+    /** Geographic distribution */
+    geographicDistribution: Record<string, number>;
+}
+/**
+ * Granularity analysis results
+ */
+interface GranularityAnalysis {
+    level: GranularityLevel;
+    config: GranularityConfig;
+    /** Total profiles generated */
+    totalProfiles: number;
+    /** Resource usage */
+    resourceUsage: {
+        computationTimeSeconds: number;
+        modelCallsUsed: number;
+        memoryUsedMB: number;
+        costEstimateUSD: number;
+    };
+    /** State-level results */
+    stateResults?: {
+        aggregateVote: {
+            D: number;
+            R: number;
+            I: number;
+        };
+        turnoutEstimate: number;
+    };
+    /** County-level results */
+    countyResults?: Record<string, {
+        aggregateVote: {
+            D: number;
+            R: number;
+            I: number;
+        };
+        turnoutEstimate: number;
+        demographicBreakdown: any;
+    }>;
+    /** Precinct-level results */
+    precinctResults?: Record<string, {
+        aggregateVote: {
+            D: number;
+            R: number;
+            I: number;
+        };
+        turnoutEstimate: number;
+    }>;
+    /** Cluster-level results */
+    clusterResults?: Record<string, DemographicCluster>;
+    /** Individual profiles */
+    individualProfiles?: VoterProfile[];
+    /** Insights and patterns */
+    insights: {
+        keyDemographics: string[];
+        swingVoterClusters: string[];
+        highValueTargets: string[];
+        persuasionOpportunities: string[];
+    };
+    /** Quality metrics */
+    quality: {
+        confidence: number;
+        groundingDataCoverage: number;
+        validationScore: number;
+    };
+}
+/**
+ * Resource estimation for different granularity levels
+ */
+declare const GRANULARITY_RESOURCE_REQUIREMENTS: Record<GranularityLevel, GranularityResourceRequirements>;
+/**
+ * Granular voter modeling engine
+ */
+declare class GranularVoterModeler {
+    private config;
+    constructor(config?: Partial<GranularityConfig>);
+    /**
+     * Model voters at specified granularity level
+     */
+    model(state: string, options?: {
+        counties?: string[];
+        precincts?: string[];
+        targetDemographics?: string[];
+    }): Promise<GranularityAnalysis>;
+    /**
+     * Model at state level (broad aggregates)
+     */
+    private modelStateLevel;
+    /**
+     * Model at county level
+     */
+    private modelCountyLevel;
+    /**
+     * Model at precinct level
+     */
+    private modelPrecinctLevel;
+    /**
+     * Model demographic clusters with personas
+     */
+    private modelClusterLevel;
+    /**
+     * Model individual voters with sub-personas
+     */
+    private modelIndividualLevel;
+    /**
+     * Estimate resources for a modeling scenario
+     */
+    static estimateResources(level: GranularityLevel, scope: {
+        states?: number;
+        counties?: number;
+        precincts?: number;
+        profiles?: number;
+    }): GranularityResourceRequirements;
+}
+
+/**
  * @ruvector/agentic-synth-examples
  *
  * Production-ready examples for agentic-synth including:
@@ -1639,6 +2653,14 @@ declare const Examples: {
      * Create a streaming optimization engine
      */
     createStreamingOptimization: (customModels?: any) => StreamingOptimization;
+    /**
+     * Create an election simulator
+     */
+    createElectionSimulator: (config?: any) => ElectionSimulator;
+    /**
+     * Create a granular voter modeler
+     */
+    createGranularModeler: (config?: any) => GranularVoterModeler;
 };
 
-export { type Agent, type AgentMemory, type AgentRole, type AnomalyPattern, BenchmarkCollector, type BenchmarkMetrics, type BenchmarkResult, CICDDataGenerator, type PerformanceMetrics as CICDPerformanceMetrics, ClaudeSonnetAgent, type ComparisonReport, type CoordinationStrategy, type CoordinationTask, type DSPySignature, DSPyTrainingSession, type DeploymentRecord, type DistributedLearningPattern, Examples, type FeedbackData, GPT4Agent, GeminiAgent, type IterationResult, type LearningMetrics, LlamaAgent, type MarketCondition, type MarketNewsEvent, type MarketStatistics, type ModelConfig$1 as ModelConfig, ModelProvider, ModelTrainingAgent, type MonitoringAlert, MultiModelBenchmark, type OHLCVData, OptimizationEngine, type PenetrationTestScenario, type PerformanceMetrics$1 as PerformanceMetrics, type PipelineExecution, type PipelineStatus, type QualityMetrics, type SecurityLogEntry, SecurityTestingGenerator, type SelfLearningConfig, SelfLearningGenerator, type StockMarketConfig, StockMarketSimulator, type StreamingBenchmarkResult, type StreamingModelConfig, StreamingOptimization, type StreamingOptimizationResult, type StreamingPerformanceHistory, type StreamingQualityMetrics, SwarmCoordinator, type SwarmStatistics, type TestResults, type TrainingConfig, TrainingPhase, type VulnerabilitySeverity, type VulnerabilityTestCase, type VulnerabilityType, runStreamingOptimizationExample };
+export { type Agent, type AgentMemory, type AgentRole, type AnomalyPattern, BenchmarkCollector, type BenchmarkMetrics, type BenchmarkResult, type BenfordAnalysis, CICDDataGenerator, type PerformanceMetrics as CICDPerformanceMetrics, type CampaignFactors, ClaudeSonnetAgent, type ComparisonReport, type CoordinationStrategy, type CoordinationTask, type CountyResult, type DSPySignature, DSPyTrainingSession, type DemographicCluster, type Demographics, type DeploymentRecord, type DistributedLearningPattern, type EconomicIndicators, type ElectionLearningMetrics, ElectionSimulator, Examples, type FeedbackData, type FraudAlert, FraudDetectionEngine, GPT4Agent, GRANULARITY_RESOURCE_REQUIREMENTS, GeminiAgent, GranularVoterModeler, type GranularityAnalysis, type GranularityConfig, GranularityLevel, type GranularityResourceRequirements, type GroundingDataSource, type HistoricalResults, type IssuePosition, type IterationResult, type LearningMetrics, type LiveProjection, type LiveVoteUpdate, LlamaAgent, type MarketCondition, type MarketNewsEvent, type MarketStatistics, type ModelConfig$1 as ModelConfig, type ModelPerformance, ModelProvider, ModelTrainingAgent, type MonitoringAlert, MultiModelBenchmark, type NationalResults, type OHLCVData, OptimizationEngine, type PenetrationTestScenario, type PerformanceMetrics$1 as PerformanceMetrics, type PipelineExecution, type PipelineStatus, type PoliticalEnvironment, type PollingData, type QualityMetrics, type RaceStatus, RealTimeMonitor, type ScenarioAnalysis, type SecurityLogEntry, SecurityTestingGenerator, type SelfLearningConfig, SelfLearningGenerator, type SensitivityAnalysis, type SimulationConfig, type SimulationProgress, type SimulationResult, type StateAggregateResults, type StateElectionData, type StockMarketConfig, StockMarketSimulator, type StreamingBenchmarkResult, type StreamingModelConfig, StreamingOptimization, type StreamingOptimizationResult, type StreamingPerformanceHistory, type StreamingQualityMetrics, type SubPersona, SwarmCoordinator, type SwarmStatistics, type TestResults, type TrainingConfig, TrainingPhase, type TurnoutAnomaly, type USState, US_STATES, type VoteCountData, type VoteHistory, type VoteTypeAnalysis, type VoterProfile, type VulnerabilitySeverity, type VulnerabilityTestCase, type VulnerabilityType, createLiveDashboard, getCompetitiveStates, getGovernorRaceStates, getSenateRaceStates, getStateByAbbr, getStatesByRegion, runElectionSimulation, runStreamingOptimizationExample };

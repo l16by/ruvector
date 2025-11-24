@@ -1,6 +1,6 @@
 {
   "name": "@ruvector/agentic-synth-examples",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Production-ready examples for @ruvector/agentic-synth - DSPy training, multi-model benchmarking, and advanced synthetic data generation patterns",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -34,7 +34,8 @@
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
     "build:dspy": "tsup src/dspy/index.ts --format esm,cjs --dts --out-dir dist/dspy",
     "build:advanced": "tsup src/advanced/streaming-optimization.ts --format esm,cjs --dts --out-dir dist/advanced",
-    "build:all": "npm run build && npm run build:dspy && npm run build:advanced",
+    "build:election": "tsup src/election-2026/index.ts src/election-2026/simulator.ts --format esm,cjs --dts --out-dir dist/election-2026 && tsup src/election-2026/data/states.ts --format esm,cjs --dts --out-dir dist/election-2026/data",
+    "build:all": "npm run build && npm run build:dspy && npm run build:advanced && npm run build:election",
     "dev": "tsup src/index.ts --format esm --watch",
     "test": "vitest run",
     "test:watch": "vitest",

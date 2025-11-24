@@ -97,6 +97,61 @@ export type {
   StreamingPerformanceHistory
 } from './advanced/streaming-optimization.js';
 
+// Election 2026 simulation
+export {
+  ElectionSimulator,
+  runElectionSimulation,
+  US_STATES,
+  getSenateRaceStates,
+  getGovernorRaceStates,
+  getCompetitiveStates,
+  getStateByAbbr,
+  getStatesByRegion,
+  FraudDetectionEngine,
+  RealTimeMonitor,
+  createLiveDashboard,
+  GranularVoterModeler,
+  GranularityLevel,
+  GRANULARITY_RESOURCE_REQUIREMENTS
+} from './election-2026/index.js';
+export type {
+  USState,
+  Demographics,
+  EconomicIndicators,
+  PollingData,
+  HistoricalResults,
+  PoliticalEnvironment,
+  CampaignFactors,
+  StateElectionData,
+  SimulationResult,
+  StateAggregateResults,
+  NationalResults,
+  ElectionLearningMetrics,
+  ModelPerformance,
+  SimulationConfig,
+  SimulationProgress,
+  ScenarioAnalysis,
+  SensitivityAnalysis,
+  FraudAlert,
+  VoteCountData,
+  BenfordAnalysis,
+  TurnoutAnomaly,
+  LiveVoteUpdate,
+  RaceStatus,
+  CountyResult,
+  VoteTypeAnalysis,
+  LiveProjection,
+  GranularityResourceRequirements,
+  GranularityConfig,
+  GroundingDataSource,
+  VoterProfile,
+  VoteHistory,
+  IssuePosition,
+  SubPersona,
+  DemographicCluster,
+  GranularityAnalysis
+} from './election-2026/index.js';
+
 /**
  * Factory functions for quick initialization
  */
@@ -129,7 +184,17 @@ export const Examples = {
   /**
    * Create a streaming optimization engine
    */
-  createStreamingOptimization: (customModels?: any) => new StreamingOptimization(customModels)
+  createStreamingOptimization: (customModels?: any) => new StreamingOptimization(customModels),
+
+  /**
+   * Create an election simulator
+   */
+  createElectionSimulator: (config?: any) => new ElectionSimulator(config),
+
+  /**
+   * Create a granular voter modeler
+   */
+  createGranularModeler: (config?: any) => new GranularVoterModeler(config)
 };
 
 // Import all generators
@@ -139,3 +204,4 @@ import { SecurityTestingGenerator } from './security/index.js';
 import { CICDDataGenerator } from './cicd/index.js';
 import { SwarmCoordinator } from './swarm/index.js';
 import { StreamingOptimization } from './advanced/streaming-optimization.js';
+import { ElectionSimulator, GranularVoterModeler } from './election-2026/index.js';
