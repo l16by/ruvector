@@ -1,7 +1,6 @@
 //! Pooling strategies for combining token embeddings into sentence embeddings
 
 use crate::config::PoolingStrategy;
-use ndarray::{Array1, Array2, Axis};
 use rayon::prelude::*;
 use tracing::{debug, instrument};
 
@@ -181,7 +180,7 @@ impl Pooler {
         &self,
         token_embeddings: &[f32],
         attention_mask: &[i64],
-        seq_length: usize,
+        _seq_length: usize,
         hidden_size: usize,
     ) -> Vec<f32> {
         // Find last non-padding token

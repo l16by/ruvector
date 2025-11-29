@@ -9,12 +9,15 @@ repository = "https://github.com/ruvnet/ruvector"
 keywords = ["onnx", "embeddings", "vector-database", "rust", "ml"]
 categories = ["science", "machine-learning"]
 
+# Make this a standalone package, not part of the workspace
+[workspace]
+
 [dependencies]
 # ONNX Runtime - Core inference engine
 ort = { version = "2.0.0-rc.9", features = ["download-binaries", "half"] }
 
 # Tokenization - HuggingFace tokenizers in Rust
-tokenizers = { version = "0.20", features = ["http"] }
+tokenizers = { version = "0.20", default-features = false, features = ["progressbar", "onig"] }
 
 # Tensor operations
 ndarray = { version = "0.16", features = ["rayon"] }
@@ -47,15 +50,16 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 sha2 = "0.10"
 hex = "0.4"
 tempfile = "3.14"
-
-# SIMD optimization (matches RuVector)
-simsimd = "5.9"
+dirs = "5.0"
 
 # Parallel processing
 rayon = "1.10"
 
-# RuVector integration (workspace path)
-ruvector-core = { path = "../../crates/ruvector-core" }
+# Concurrency
+parking_lot = "0.12"
+
+# UUID for vector IDs
+uuid = { version = "1.11", features = ["v4"] }
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
@@ -83,6 +87,7 @@ download-models = []
 cuda = ["ort/cuda"]
 tensorrt = ["ort/tensorrt"]
 coreml = ["ort/coreml"]
+simsimd = []  # Optional SIMD acceleration (not yet implemented)
 
 [profile.release]
 opt-level = 3

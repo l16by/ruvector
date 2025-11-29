@@ -2,10 +2,8 @@
 
 use anyhow::Result;
 use ruvector_onnx_embeddings::{
-    Embedder, RuVectorEmbeddings, RuVectorConfig, RuVectorBuilder,
+    Embedder, RuVectorEmbeddings, IndexConfig, Distance,
 };
-use ruvector_core::Distance;
-use std::collections::HashMap;
 use std::sync::Arc;
 
 #[tokio::main]
@@ -17,14 +15,13 @@ async fn main() -> Result<()> {
     println!("Loaded model with dimension: {}", embedder.dimension());
 
     // Create index with custom configuration
-    let config = RuVectorConfig {
+    let config = IndexConfig {
         distance: Distance::Cosine,
-        m: 32,
-        ef_construction: 200,
         max_elements: 100_000,
+        ef_search: 100,
     };
 
-    let mut index = RuVectorEmbeddings::new("semantic_docs", embedder.clone(), config)?;
+    let index = RuVectorEmbeddings::new("semantic_docs", embedder.clone(), config)?;
 
     // Sample document corpus
     let documents = vec![
@@ -43,9 +40,7 @@ async fn main() -> Result<()> {
     // Index documents with metadata
     println!("Indexing {} documents...", documents.len());
     for (id, content) in &documents {
-        let mut metadata = HashMap::new();
-        metadata.insert("doc_id".to_string(), serde_json::json!(id));
-
+        let metadata = serde_json::json!({ "doc_id": id });
         index.insert(content, Some(metadata))?;
     }
 

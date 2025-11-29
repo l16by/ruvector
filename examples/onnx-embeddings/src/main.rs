@@ -6,10 +6,8 @@
 use anyhow::Result;
 use ruvector_onnx_embeddings::{
     prelude::*, EmbedderBuilder, PretrainedModel, PoolingStrategy,
-    RuVectorConfig, RuVectorBuilder, RagPipeline,
+    RuVectorBuilder, RagPipeline, Distance,
 };
-use ruvector_core::Distance;
-use std::sync::Arc;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -45,7 +43,7 @@ async fn basic_embedding_example() -> Result<()> {
     println!("\n━━━ Example 1: Basic Embedding Generation ━━━");
 
     // Create embedder with default model (all-MiniLM-L6-v2)
-    let embedder = Embedder::default_model().await?;
+    let mut embedder = Embedder::default_model().await?;
 
     println!("Model: {}", embedder.model_info().name);
     println!("Dimension: {}", embedder.dimension());
@@ -84,7 +82,7 @@ async fn batch_embedding_example() -> Result<()> {
     println!("\n━━━ Example 2: Batch Embedding ━━━");
 
     // Create embedder with custom configuration
-    let embedder = EmbedderBuilder::new()
+    let mut embedder = EmbedderBuilder::new()
         .pretrained(PretrainedModel::AllMiniLmL6V2)
         .pooling(PoolingStrategy::Mean)
         .normalize(true)
@@ -127,14 +125,12 @@ async fn semantic_search_example() -> Result<()> {
     println!("\n━━━ Example 3: Semantic Search with RuVector ━━━");
 
     // Create embedder
-    let embedder = Arc::new(Embedder::default_model().await?);
+    let embedder = Embedder::default_model().await?;
 
     // Create RuVector index
-    let mut index = RuVectorBuilder::new("semantic_search")
-        .embedder(embedder.clone())
+    let index = RuVectorBuilder::new("semantic_search")
+        .embedder(embedder)
         .distance(Distance::Cosine)
-        .m(16)
-        .ef_construction(200)
         .max_elements(10_000)
         .build()?;
 
@@ -186,10 +182,10 @@ async fn semantic_search_example() -> Result<()> {
 async fn rag_pipeline_example() -> Result<()> {
     println!("\n━━━ Example 4: RAG Pipeline ━━━");
 
-    let embedder = Arc::new(Embedder::default_model().await?);
+    let embedder = Embedder::default_model().await?;
 
     let index = RuVectorEmbeddings::new_default("rag_index", embedder)?;
-    let mut rag = RagPipeline::new(index, 3);
+    let rag = RagPipeline::new(index, 3);
 
     // Add knowledge base
     let knowledge = vec![
@@ -229,7 +225,7 @@ async fn rag_pipeline_example() -> Result<()> {
 async fn clustering_example() -> Result<()> {
     println!("\n━━━ Example 5: Text Clustering ━━━");
 
-    let embedder = Embedder::default_model().await?;
+    let mut embedder = Embedder::default_model().await?;
 
     // Texts from different categories
     let texts = vec![

@@ -5,9 +5,7 @@ use crate::model::OnnxModel;
 use crate::pooling::Pooler;
 use crate::tokenizer::Tokenizer;
 use crate::{EmbeddingError, PretrainedModel, Result};
-use rayon::prelude::*;
 use std::path::Path;
-use std::sync::Arc;
 use tracing::{debug, info, instrument};
 
 /// High-level embedder combining tokenizer, model, and pooling
@@ -117,7 +115,7 @@ impl Embedder {
 
     /// Embed a single text
     #[instrument(skip(self, text), fields(text_len = text.len()))]
-    pub fn embed_one(&self, text: &str) -> Result<Vec<f32>> {
+    pub fn embed_one(&mut self, text: &str) -> Result<Vec<f32>> {
         let output = self.embed(&[text])?;
         output
             .embeddings
@@ -128,7 +126,7 @@ impl Embedder {
 
     /// Embed multiple texts
     #[instrument(skip(self, texts), fields(batch_size = texts.len()))]
-    pub fn embed<S: AsRef<str>>(&self, texts: &[S]) -> Result<EmbeddingOutput> {
+    pub fn embed<S: AsRef<str>>(&mut self, texts: &[S]) -> Result<EmbeddingOutput> {
         if texts.is_empty() {
             return Err(EmbeddingError::EmptyInput);
         }
@@ -155,7 +153,7 @@ impl Embedder {
     }
 
     /// Embed a batch of texts (internal)
-    fn embed_batch<S: AsRef<str>>(&self, texts: &[S]) -> Result<(Vec<Vec<f32>>, Vec<usize>)> {
+    fn embed_batch<S: AsRef<str>>(&mut self, texts: &[S]) -> Result<(Vec<Vec<f32>>, Vec<usize>)> {
         debug!("Embedding batch of {} texts", texts.len());
 
         // Tokenize
@@ -187,45 +185,17 @@ impl Embedder {
         Ok((embeddings, token_counts))
     }
 
-    /// Embed texts in parallel using multiple threads
+    /// Embed texts (sequential processing)
+    /// Note: For parallel processing, consider using tokio::spawn with multiple Embedder instances
     #[instrument(skip(self, texts), fields(total_texts = texts.len()))]
-    pub fn embed_parallel<S: AsRef<str> + Sync>(&self, texts: &[S]) -> Result<EmbeddingOutput> {
-        if texts.is_empty() {
-            return Err(EmbeddingError::EmptyInput);
-        }
-
-        let texts_owned: Vec<String> = texts.iter().map(|t| t.as_ref().to_string()).collect();
-        let batch_size = self.config.batch_size;
-
-        // Split into chunks and process in parallel
-        let results: Vec<Result<(Vec<Vec<f32>>, Vec<usize>)>> = texts
-            .par_chunks(batch_size)
-            .map(|chunk| self.embed_batch(chunk))
-            .collect();
-
-        let mut all_embeddings = Vec::with_capacity(texts.len());
-        let mut all_token_counts = Vec::with_capacity(texts.len());
-
-        for result in results {
-            let (embeddings, token_counts) = result?;
-            all_embeddings.extend(embeddings);
-            all_token_counts.extend(token_counts);
-        }
-
-        Ok(EmbeddingOutput {
-            embeddings: all_embeddings,
-            texts: texts_owned,
-            token_counts: all_token_counts,
-            dimension: self.model.dimension(),
-        })
+    pub fn embed_parallel<S: AsRef<str> + Sync>(&mut self, texts: &[S]) -> Result<EmbeddingOutput> {
+        // Use sequential processing since ONNX session requires mutable access
+        self.embed(texts)
     }
 
-    /// Stream embeddings for large datasets
-    pub fn embed_iter<'a, S: AsRef<str> + 'a>(
-        &'a self,
-        texts: impl Iterator<Item = S> + 'a,
-    ) -> impl Iterator<Item = Result<Vec<f32>>> + 'a {
-        texts.map(move |text| self.embed_one(text.as_ref()))
+    /// Process texts one at a time (use embed for batch processing)
+    pub fn embed_each<S: AsRef<str>>(&mut self, texts: &[S]) -> Vec<Result<Vec<f32>>> {
+        texts.iter().map(|text| self.embed_one(text.as_ref())).collect()
     }
 
     /// Get the embedding dimension
@@ -249,7 +219,7 @@ impl Embedder {
     }
 
     /// Compute similarity between two texts
-    pub fn similarity(&self, text1: &str, text2: &str) -> Result<f32> {
+    pub fn similarity(&mut self, text1: &str, text2: &str) -> Result<f32> {
         let emb1 = self.embed_one(text1)?;
         let emb2 = self.embed_one(text2)?;
         Ok(Pooler::cosine_similarity(&emb1, &emb2))
@@ -258,7 +228,7 @@ impl Embedder {
     /// Find most similar texts from a corpus
     #[instrument(skip(self, query, corpus), fields(corpus_size = corpus.len()))]
     pub fn most_similar<S: AsRef<str>>(
-        &self,
+        &mut self,
         query: &str,
         corpus: &[S],
         top_k: usize,
@@ -285,7 +255,7 @@ impl Embedder {
     /// Cluster texts by similarity (simple k-means-like approach)
     #[instrument(skip(self, texts), fields(n_texts = texts.len(), n_clusters))]
     pub fn cluster<S: AsRef<str>>(
-        &self,
+        &mut self,
         texts: &[S],
         n_clusters: usize,
     ) -> Result<Vec<usize>> {

@@ -61,6 +61,17 @@ impl EncodedBatch {
     }
 }
 
+/// Helper function to find pad token ID from vocabulary
+fn find_pad_token_id(tokenizer: &HfTokenizer) -> u32 {
+    let vocab = tokenizer.get_vocab(true);
+    vocab
+        .get("[PAD]")
+        .or_else(|| vocab.get("<pad>"))
+        .or_else(|| vocab.get("<|pad|>"))
+        .copied()
+        .unwrap_or(0)
+}
+
 impl Tokenizer {
     /// Load tokenizer from a local file
     #[instrument(skip_all, fields(path = %path.as_ref().display()))]
@@ -71,12 +82,7 @@ impl Tokenizer {
         let inner = HfTokenizer::from_file(path)
             .map_err(|e| EmbeddingError::tokenizer_not_found(e.to_string()))?;
 
-        let pad_token_id = inner
-            .get_vocab(true)
-            .get("[PAD]")
-            .or_else(|| inner.get_vocab(true).get("<pad>"))
-            .copied()
-            .unwrap_or(0);
+        let pad_token_id = find_pad_token_id(&inner);
 
         Ok(Self {
             inner,
@@ -85,20 +91,35 @@ impl Tokenizer {
         })
     }
 
-    /// Load tokenizer from HuggingFace Hub
+    /// Load tokenizer from HuggingFace Hub by downloading tokenizer.json
     #[instrument(skip_all, fields(model_id = %model_id))]
     pub fn from_pretrained(model_id: &str, max_length: usize) -> Result<Self> {
-        debug!("Loading tokenizer from HuggingFace Hub");
+        debug!("Loading tokenizer from HuggingFace Hub: {}", model_id);
 
-        let inner = HfTokenizer::from_pretrained(model_id, None)
+        // Download tokenizer.json from HuggingFace Hub
+        let url = format!(
+            "https://huggingface.co/{}/resolve/main/tokenizer.json",
+            model_id
+        );
+
+        let response = reqwest::blocking::get(&url)
+            .map_err(|e| EmbeddingError::download_failed(format!("Failed to download tokenizer: {}", e)))?;
+
+        if !response.status().is_success() {
+            return Err(EmbeddingError::download_failed(format!(
+                "Failed to download tokenizer from {}: HTTP {}",
+                url,
+                response.status()
+            )));
+        }
+
+        let bytes = response.bytes()
+            .map_err(|e| EmbeddingError::download_failed(e.to_string()))?;
+
+        let inner = HfTokenizer::from_bytes(&bytes)
             .map_err(|e| EmbeddingError::tokenizer_not_found(e.to_string()))?;
 
-        let pad_token_id = inner
-            .get_vocab(true)
-            .get("[PAD]")
-            .or_else(|| inner.get_vocab(true).get("<pad>"))
-            .copied()
-            .unwrap_or(0);
+        let pad_token_id = find_pad_token_id(&inner);
 
         Ok(Self {
             inner,
@@ -112,12 +133,7 @@ impl Tokenizer {
         let inner = HfTokenizer::from_bytes(json.as_bytes())
             .map_err(|e| EmbeddingError::tokenizer_not_found(e.to_string()))?;
 
-        let pad_token_id = inner
-            .get_vocab(true)
-            .get("[PAD]")
-            .or_else(|| inner.get_vocab(true).get("<pad>"))
-            .copied()
-            .unwrap_or(0);
+        let pad_token_id = find_pad_token_id(&inner);
 
         Ok(Self {
             inner,
@@ -175,9 +191,9 @@ impl Tokenizer {
             // Pad to max_len
             let pad_len = max_len - len;
             if pad_len > 0 {
-                ids_vec.extend(std::iter::repeat(self.pad_token_id as i64).take(pad_len));
-                mask_vec.extend(std::iter::repeat(0i64).take(pad_len));
-                type_vec.extend(std::iter::repeat(0i64).take(pad_len));
+                ids_vec.extend(std::iter::repeat_n(self.pad_token_id as i64, pad_len));
+                mask_vec.extend(std::iter::repeat_n(0i64, pad_len));
+                type_vec.extend(std::iter::repeat_n(0i64, pad_len));
             }
 
             input_ids.push(ids_vec);

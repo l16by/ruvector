@@ -65,23 +65,26 @@ pub mod tokenizer;
 
 // Re-exports
 pub use config::{EmbedderConfig, ModelSource, PoolingStrategy};
-pub use embedder::Embedder;
+pub use embedder::{Embedder, EmbedderBuilder, EmbeddingOutput};
 pub use error::{EmbeddingError, Result};
 pub use model::{OnnxModel, ModelInfo};
 pub use pooling::Pooler;
-pub use ruvector_integration::RuVectorEmbeddings;
+pub use ruvector_integration::{
+    Distance, IndexConfig, RagPipeline, RuVectorBuilder, RuVectorEmbeddings, SearchResult, VectorId,
+};
 pub use tokenizer::Tokenizer;
 
 /// Prelude module for convenient imports
 pub mod prelude {
     pub use crate::{
-        Embedder, EmbedderConfig, EmbeddingError, ModelSource,
-        PoolingStrategy, Result, RuVectorEmbeddings,
+        Distance, Embedder, EmbedderBuilder, EmbedderConfig, EmbeddingError,
+        IndexConfig, ModelSource, PoolingStrategy, RagPipeline, Result,
+        RuVectorBuilder, RuVectorEmbeddings, SearchResult, VectorId,
     };
 }
 
 /// Supported embedding models with pre-configured settings
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum PretrainedModel {
     /// all-MiniLM-L6-v2: 384 dimensions, fast inference
     AllMiniLmL6V2,

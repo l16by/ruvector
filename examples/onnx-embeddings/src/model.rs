@@ -3,11 +3,11 @@
 use crate::config::{EmbedderConfig, ExecutionProvider, ModelSource};
 use crate::{EmbeddingError, PretrainedModel, Result};
 use indicatif::{ProgressBar, ProgressStyle};
-use ort::{GraphOptimizationLevel, Session, SessionBuilder};
+use ort::session::{builder::GraphOptimizationLevel, Session};
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use tracing::{debug, info, instrument, warn};
 
 /// Information about a loaded model
@@ -132,7 +132,7 @@ impl OnnxModel {
 
     /// Create an ONNX session with the specified configuration
     fn create_session(path: &Path, config: &EmbedderConfig) -> Result<Session> {
-        let mut builder = SessionBuilder::new()?;
+        let mut builder = Session::builder()?;
 
         // Set optimization level
         if config.optimize_graph {
@@ -150,7 +150,7 @@ impl OnnxModel {
             #[cfg(feature = "cuda")]
             ExecutionProvider::Cuda { device_id } => {
                 builder = builder.with_execution_providers([
-                    ort::CUDAExecutionProvider::default()
+                    ort::execution_providers::CUDAExecutionProvider::default()
                         .with_device_id(device_id)
                         .build(),
                 ])?;
@@ -158,7 +158,7 @@ impl OnnxModel {
             #[cfg(feature = "tensorrt")]
             ExecutionProvider::TensorRt { device_id } => {
                 builder = builder.with_execution_providers([
-                    ort::TensorRTExecutionProvider::default()
+                    ort::execution_providers::TensorRTExecutionProvider::default()
                         .with_device_id(device_id)
                         .build(),
                 ])?;
@@ -166,7 +166,7 @@ impl OnnxModel {
             #[cfg(feature = "coreml")]
             ExecutionProvider::CoreMl => {
                 builder = builder.with_execution_providers([
-                    ort::CoreMLExecutionProvider::default().build(),
+                    ort::execution_providers::CoreMLExecutionProvider::default().build(),
                 ])?;
             }
             _ => {
@@ -182,20 +182,12 @@ impl OnnxModel {
 
     /// Extract model information from the session
     fn extract_model_info(session: &Session, path: &Path, file_size: u64) -> Result<ModelInfo> {
-        let inputs = session.inputs.iter().map(|i| i.name.clone()).collect();
-        let outputs = session.outputs.iter().map(|o| o.name.clone()).collect();
+        let inputs: Vec<String> = session.inputs.iter().map(|i| i.name.clone()).collect();
+        let outputs: Vec<String> = session.outputs.iter().map(|o| o.name.clone()).collect();
 
-        // Try to determine embedding dimension from output shape
-        let dimension = session
-            .outputs
-            .first()
-            .and_then(|o| {
-                o.output_type.tensor_dimensions().and_then(|dims| {
-                    // Usually [batch, seq_len, dim] or [batch, dim]
-                    dims.last().copied()
-                })
-            })
-            .unwrap_or(384) as usize;
+        // Default embedding dimension (will be determined at runtime from actual output)
+        // Most sentence-transformers models output 384 dimensions
+        let dimension = 384;
 
         let name = path
             .file_stem()
@@ -205,7 +197,7 @@ impl OnnxModel {
         Ok(ModelInfo {
             name,
             dimension,
-            max_seq_length: 512, // Default, may be overridden
+            max_seq_length: 512,
             file_size,
             input_names: inputs,
             output_names: outputs,
@@ -215,14 +207,13 @@ impl OnnxModel {
     /// Run inference on encoded inputs
     #[instrument(skip_all, fields(batch_size, seq_length))]
     pub fn run(
-        &self,
+        &mut self,
         input_ids: &[i64],
         attention_mask: &[i64],
         token_type_ids: &[i64],
         shape: &[usize],
     ) -> Result<Vec<Vec<f32>>> {
-        use ndarray::Array2;
-        use ort::inputs;
+        use ort::value::Tensor;
 
         let batch_size = shape[0];
         let seq_length = shape[1];
@@ -232,42 +223,56 @@ impl OnnxModel {
             batch_size, seq_length
         );
 
-        // Create input tensors
-        let input_ids_array = Array2::from_shape_vec(
-            (batch_size, seq_length),
-            input_ids.to_vec(),
-        )?;
-        let attention_mask_array = Array2::from_shape_vec(
-            (batch_size, seq_length),
-            attention_mask.to_vec(),
-        )?;
-        let token_type_ids_array = Array2::from_shape_vec(
-            (batch_size, seq_length),
-            token_type_ids.to_vec(),
-        )?;
+        // Create input tensors using ort's Tensor type
+        let input_ids_tensor = Tensor::from_array((
+            vec![batch_size, seq_length],
+            input_ids.to_vec().into_boxed_slice(),
+        ))
+        .map_err(|e| EmbeddingError::invalid_model(e.to_string()))?;
+
+        let attention_mask_tensor = Tensor::from_array((
+            vec![batch_size, seq_length],
+            attention_mask.to_vec().into_boxed_slice(),
+        ))
+        .map_err(|e| EmbeddingError::invalid_model(e.to_string()))?;
+
+        let token_type_ids_tensor = Tensor::from_array((
+            vec![batch_size, seq_length],
+            token_type_ids.to_vec().into_boxed_slice(),
+        ))
+        .map_err(|e| EmbeddingError::invalid_model(e.to_string()))?;
+
+        // Build inputs vector
+        let inputs = vec![
+            ("input_ids", input_ids_tensor.into_dyn()),
+            ("attention_mask", attention_mask_tensor.into_dyn()),
+            ("token_type_ids", token_type_ids_tensor.into_dyn()),
+        ];
 
         // Run inference
-        let outputs = self.session.run(inputs![
-            "input_ids" => input_ids_array,
-            "attention_mask" => attention_mask_array,
-            "token_type_ids" => token_type_ids_array,
-        ]?)?;
+        let outputs = self.session.run(inputs)
+            .map_err(EmbeddingError::OnnxRuntime)?;
 
         // Extract output tensor
         // Usually the output is [batch, seq_len, hidden_size] or [batch, hidden_size]
-        let output = outputs
-            .get("last_hidden_state")
-            .or_else(|| outputs.get("output"))
-            .or_else(|| outputs.get("sentence_embedding"))
-            .or_else(|| outputs.values().next())
+        let output_names = ["last_hidden_state", "output", "sentence_embedding"];
+
+        // Find the appropriate output by name, or use the first one
+        let output_iter: Vec<_> = outputs.iter().collect();
+        let output = output_iter
+            .iter()
+            .find(|(name, _)| output_names.contains(name))
+            .or_else(|| output_iter.first())
+            .map(|(_, v)| v)
             .ok_or_else(|| EmbeddingError::invalid_model("No output tensor found"))?;
 
-        let tensor = output
+        // In ort 2.0, try_extract_tensor returns (&Shape, &[f32])
+        let (tensor_shape, tensor_data) = output
             .try_extract_tensor::<f32>()
             .map_err(|e| EmbeddingError::invalid_model(e.to_string()))?;
 
-        let view = tensor.view();
-        let dims = view.shape();
+        // Convert Shape to Vec<usize> - Shape yields i64
+        let dims: Vec<usize> = tensor_shape.iter().map(|&d| d as usize).collect();
 
         // Handle different output shapes
         let embeddings = if dims.len() == 3 {
@@ -277,9 +282,7 @@ impl OnnxModel {
                 .map(|i| {
                     let start = i * seq_length * hidden_size;
                     let end = start + seq_length * hidden_size;
-                    view.as_slice()
-                        .map(|s| s[start..end].to_vec())
-                        .unwrap_or_default()
+                    tensor_data[start..end].to_vec()
                 })
                 .collect()
         } else if dims.len() == 2 {
@@ -289,9 +292,7 @@ impl OnnxModel {
                 .map(|i| {
                     let start = i * hidden_size;
                     let end = start + hidden_size;
-                    view.as_slice()
-                        .map(|s| s[start..end].to_vec())
-                        .unwrap_or_default()
+                    tensor_data[start..end].to_vec()
                 })
                 .collect()
         } else {
@@ -411,10 +412,7 @@ async fn download_file(url: &str, path: &Path, show_progress: bool) -> Result<()
 
 /// Sanitize model ID for use as directory name
 fn sanitize_model_id(model_id: &str) -> String {
-    model_id
-        .replace('/', "_")
-        .replace('\\', "_")
-        .replace(':', "_")
+    model_id.replace(['/', '\\', ':'], "_")
 }
 
 /// Create a hash of a URL for caching
