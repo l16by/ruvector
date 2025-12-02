@@ -108,6 +108,10 @@ required-features = ["server"]
 name = "ruvllm-bench"
 path = "src/bin/bench.rs"
 
+[[bin]]
+name = "ruvllm-benchmark-suite"
+path = "src/bin/benchmark_suite.rs"
+
 [[test]]
 name = "integration"
 path = "tests/integration.rs"
