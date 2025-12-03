@@ -106,6 +106,10 @@ harness = false
 name = "attention"
 harness = false
 
+[[bench]]
+name = "sona_bench"
+harness = false
+
 [lib]
 name = "ruvllm"
 path = "src/lib.rs"

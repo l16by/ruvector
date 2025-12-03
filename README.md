@@ -31,7 +31,7 @@ Traditional vector databases just store and search. When you ask "find similar i
 8. **Drop into Postgres** — pgvector-compatible extension with SIMD acceleration
 9. **Run anywhere** — Node.js, browser (WASM), HTTP server, or native Rust
 
-Think of it as: **Pinecone + Neo4j + PyTorch + pgvector + etcd** in one Rust package.
+Think of it as: **Pinecone + Neo4j + PyTorch + postgres + etcd** in one Rust package.
 
 
 
