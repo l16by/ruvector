@@ -232,7 +232,7 @@ impl Router {
             let magnitude: f32 = hidden.iter().map(|&h| h * h).sum::<f32>().sqrt();
             (magnitude / hidden.len() as f32).min(1.0).max(0.0)
         } else {
-            best_score
+            *best_score
         };
 
         // Build alternatives list

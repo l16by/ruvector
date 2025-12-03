@@ -3,6 +3,7 @@
 // SQL functions for agent registration, routing, and management.
 
 use pgrx::prelude::*;
+use pgrx::JsonB;
 use serde_json::json;
 use std::sync::OnceLock;
 

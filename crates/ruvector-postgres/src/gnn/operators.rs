@@ -4,28 +4,39 @@ use super::aggregators::{aggregate, AggregationMethod};
 use super::gcn::GCNLayer;
 use super::graphsage::{GraphSAGELayer, SAGEAggregator};
 use pgrx::prelude::*;
+use pgrx::JsonB;
 
 /// Apply GCN forward pass on embeddings
 ///
 /// # Arguments
-/// * `embeddings` - Node embeddings [num_nodes x in_features]
+/// * `embeddings_json` - Node embeddings as JSON array [num_nodes x in_features]
 /// * `src` - Source node indices
 /// * `dst` - Destination node indices
 /// * `weights` - Edge weights (optional)
 /// * `out_dim` - Output dimension
 ///
 /// # Returns
-/// Updated node embeddings after GCN layer
+/// Updated node embeddings after GCN layer as JSON
 #[pg_extern(immutable, parallel_safe)]
 pub fn ruvector_gcn_forward(
-    embeddings: Vec<Vec<f32>>,
+    embeddings_json: JsonB,
     src: Vec<i32>,
     dst: Vec<i32>,
     weights: Option<Vec<f32>>,
     out_dim: i32,
-) -> Vec<Vec<f32>> {
+) -> JsonB {
+    // Parse embeddings from JSON
+    let embeddings: Vec<Vec<f32>> = match embeddings_json.0.as_array() {
+        Some(arr) => arr.iter()
+            .filter_map(|v| v.as_array().map(|a|
+                a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
+            ))
+            .collect(),
+        None => return JsonB(serde_json::json!([])),
+    };
+
     if embeddings.is_empty() {
-        return vec![];
+        return JsonB(serde_json::json!([]));
     }
 
     let in_features = embeddings[0].len();
@@ -42,19 +53,31 @@ pub fn ruvector_gcn_forward(
     let layer = GCNLayer::new(in_features, out_features);
 
     // Forward pass
-    layer.forward(&embeddings, &edge_index, weights.as_deref())
+    let result = layer.forward(&embeddings, &edge_index, weights.as_deref());
+
+    JsonB(serde_json::json!(result))
 }
 
 /// Aggregate neighbor messages using specified method
 ///
 /// # Arguments
-/// * `messages` - Vector of neighbor messages
+/// * `messages_json` - Vector of neighbor messages as JSON array
 /// * `method` - Aggregation method: 'sum', 'mean', or 'max'
 ///
 /// # Returns
 /// Aggregated message vector
 #[pg_extern(immutable, parallel_safe)]
-pub fn ruvector_gnn_aggregate(messages: Vec<Vec<f32>>, method: String) -> Vec<f32> {
+pub fn ruvector_gnn_aggregate(messages_json: JsonB, method: String) -> Vec<f32> {
+    // Parse messages from JSON
+    let messages: Vec<Vec<f32>> = match messages_json.0.as_array() {
+        Some(arr) => arr.iter()
+            .filter_map(|v| v.as_array().map(|a|
+                a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
+            ))
+            .collect(),
+        None => return vec![],
+    };
+
     if messages.is_empty() {
         return vec![];
     }
@@ -105,24 +128,34 @@ pub fn ruvector_message_pass(
 /// Apply GraphSAGE layer with neighbor sampling
 ///
 /// # Arguments
-/// * `embeddings` - Node embeddings [num_nodes x in_features]
+/// * `embeddings_json` - Node embeddings as JSON [num_nodes x in_features]
 /// * `src` - Source node indices
 /// * `dst` - Destination node indices
 /// * `out_dim` - Output dimension
 /// * `num_samples` - Number of neighbors to sample per node
 ///
 /// # Returns
-/// Updated node embeddings after GraphSAGE layer
+/// Updated node embeddings after GraphSAGE layer as JSON
 #[pg_extern(immutable, parallel_safe)]
 pub fn ruvector_graphsage_forward(
-    embeddings: Vec<Vec<f32>>,
+    embeddings_json: JsonB,
     src: Vec<i32>,
     dst: Vec<i32>,
     out_dim: i32,
     num_samples: i32,
-) -> Vec<Vec<f32>> {
+) -> JsonB {
+    // Parse embeddings from JSON
+    let embeddings: Vec<Vec<f32>> = match embeddings_json.0.as_array() {
+        Some(arr) => arr.iter()
+            .filter_map(|v| v.as_array().map(|a|
+                a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
+            ))
+            .collect(),
+        None => return JsonB(serde_json::json!([])),
+    };
+
     if embeddings.is_empty() {
-        return vec![];
+        return JsonB(serde_json::json!([]));
     }
 
     let in_features = embeddings[0].len();
@@ -139,33 +172,45 @@ pub fn ruvector_graphsage_forward(
     let layer = GraphSAGELayer::new(in_features, out_features, num_samples as usize);
 
     // Forward pass
-    layer.forward(&embeddings, &edge_index)
+    let result = layer.forward(&embeddings, &edge_index);
+
+    JsonB(serde_json::json!(result))
 }
 
 /// Batch GNN inference on multiple graphs
 ///
 /// # Arguments
-/// * `embeddings_batch` - Batch of node embeddings
+/// * `embeddings_batch_json` - Batch of node embeddings as JSON
 /// * `edge_indices_batch` - Batch of edge indices (flattened)
 /// * `graph_sizes` - Number of nodes in each graph
 /// * `layer_type` - Type of layer: 'gcn' or 'sage'
 /// * `out_dim` - Output dimension
 ///
 /// # Returns
-/// Batch of updated embeddings
+/// Batch of updated embeddings as JSON
 #[pg_extern(immutable, parallel_safe)]
 pub fn ruvector_gnn_batch_forward(
-    embeddings_batch: Vec<Vec<f32>>,
+    embeddings_batch_json: JsonB,
     edge_indices_batch: Vec<i32>,
     graph_sizes: Vec<i32>,
     layer_type: String,
     out_dim: i32,
-) -> Vec<Vec<f32>> {
+) -> JsonB {
+    // Parse embeddings from JSON
+    let embeddings_batch: Vec<Vec<f32>> = match embeddings_batch_json.0.as_array() {
+        Some(arr) => arr.iter()
+            .filter_map(|v| v.as_array().map(|a|
+                a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
+            ))
+            .collect(),
+        None => return JsonB(serde_json::json!([])),
+    };
+
     if embeddings_batch.is_empty() || graph_sizes.is_empty() {
-        return vec![];
+        return JsonB(serde_json::json!([]));
     }
 
-    let mut result = Vec::new();
+    let mut result: Vec<Vec<f32>> = Vec::new();
     let mut node_offset = 0;
     let mut edge_offset = 0;
 
@@ -201,10 +246,26 @@ pub fn ruvector_gnn_batch_forward(
             .map(|&x| x - node_offset as i32)
             .collect();
 
+        // Build edge index
+        let edge_index: Vec<(usize, usize)> = src
+            .iter()
+            .zip(dst.iter())
+            .map(|(&s, &d)| (s as usize, d as usize))
+            .collect();
+
         // Apply GNN layer
+        let in_features = if graph_embeddings.is_empty() { 0 } else { graph_embeddings[0].len() };
+        let out_features = out_dim as usize;
+
         let graph_result = match layer_type.to_lowercase().as_str() {
-            "gcn" => ruvector_gcn_forward(graph_embeddings, src, dst, None, out_dim),
-            "sage" => ruvector_graphsage_forward(graph_embeddings, src, dst, out_dim, 10),
+            "gcn" => {
+                let layer = GCNLayer::new(in_features, out_features);
+                layer.forward(&graph_embeddings, &edge_index, None)
+            },
+            "sage" => {
+                let layer = GraphSAGELayer::new(in_features, out_features, 10);
+                layer.forward(&graph_embeddings, &edge_index)
+            },
             _ => graph_embeddings,
         };
 
@@ -214,7 +275,7 @@ pub fn ruvector_gnn_batch_forward(
         edge_offset += num_edges * 2;
     }
 
-    result
+    JsonB(serde_json::json!(result))
 }
 
 #[cfg(any(test, feature = "pg_test"))]

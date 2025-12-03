@@ -20,7 +20,7 @@ impl PoincareBall {
     /// Compute squared norm of a vector
     #[inline]
     fn norm_squared(&self, x: &[f32]) -> f32 {
-        f32::dot(x, x).unwrap_or(0.0).max(0.0)
+        (f32::dot(x, x).unwrap_or(0.0) as f32).max(0.0)
     }
 
     /// Compute norm of a vector
@@ -82,11 +82,11 @@ impl PoincareBall {
 
         let x_norm_sq = self.norm_squared(x);
         let y_norm_sq = self.norm_squared(y);
-        let xy_dot = f32::dot(x, y).unwrap_or(0.0);
+        let xy_dot = f32::dot(x, y).unwrap_or(0.0) as f32;
 
-        let numerator_x_coeff = 1.0 + 2.0 * xy_dot + y_norm_sq;
-        let numerator_y_coeff = 1.0 - x_norm_sq;
-        let denominator = 1.0 + 2.0 * xy_dot + x_norm_sq * y_norm_sq + EPSILON;
+        let numerator_x_coeff = 1.0f32 + 2.0f32 * xy_dot + y_norm_sq;
+        let numerator_y_coeff = 1.0f32 - x_norm_sq;
+        let denominator = 1.0f32 + 2.0f32 * xy_dot + x_norm_sq * y_norm_sq + EPSILON;
 
         let result: Vec<f32> = x
             .iter()

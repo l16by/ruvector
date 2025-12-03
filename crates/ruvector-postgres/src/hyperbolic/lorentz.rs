@@ -25,9 +25,9 @@ impl LorentzModel {
 
         let time_part = -x[0] * y[0];
         let spatial_part = if x.len() > 1 {
-            f32::dot(&x[1..], &y[1..]).unwrap_or(0.0)
+            f32::dot(&x[1..], &y[1..]).unwrap_or(0.0) as f32
         } else {
-            0.0
+            0.0f32
         };
 
         time_part + spatial_part
@@ -50,20 +50,21 @@ impl LorentzModel {
     /// Convert from Poincaré ball coordinates to Lorentz hyperboloid
     /// x → (1 + ||x||², 2x₁, 2x₂, ..., 2xₙ) / (1 - ||x||²)
     pub fn from_poincare(&self, x: &[f32]) -> Vec<f32> {
-        let norm_sq = f32::dot(x, x).unwrap_or(0.0).max(0.0);
-        let denominator = 1.0 - norm_sq + EPSILON;
+        let norm_sq = f32::dot(x, x).unwrap_or(0.0) as f32;
+        let norm_sq = norm_sq.max(0.0);
+        let denominator = 1.0f32 - norm_sq + EPSILON;
 
         if denominator <= EPSILON {
             // Point at infinity, return large time coordinate
-            let mut result = vec![0.0; x.len() + 1];
-            result[0] = 1e6; // Large time coordinate
+            let mut result = vec![0.0f32; x.len() + 1];
+            result[0] = 1e6f32; // Large time coordinate
             return result;
         }
 
-        let time_coord = (1.0 + norm_sq) / denominator;
-        let spatial_scale = 2.0 / denominator;
+        let time_coord = (1.0f32 + norm_sq) / denominator;
+        let spatial_scale = 2.0f32 / denominator;
 
-        let mut result = Vec::with_capacity(x.len() + 1);
+        let mut result: Vec<f32> = Vec::with_capacity(x.len() + 1);
         result.push(time_coord);
         for &xi in x {
             result.push(xi * spatial_scale);

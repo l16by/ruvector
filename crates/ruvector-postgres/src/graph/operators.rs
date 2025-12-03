@@ -1,6 +1,7 @@
 // PostgreSQL operators for graph operations
 
 use pgrx::prelude::*;
+use pgrx::JsonB;
 use serde_json::{json, Value as JsonValue};
 use std::collections::HashMap;
 

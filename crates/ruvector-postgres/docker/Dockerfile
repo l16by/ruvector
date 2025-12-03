@@ -1,7 +1,7 @@
 # RuVector-Postgres Development & Testing Dockerfile
 # Multi-stage build for PostgreSQL 16 with pgrx and all dependencies
 
-FROM rust:1.82-bookworm AS builder
+FROM rust:1.83-bookworm AS builder
 
 # Add PostgreSQL APT repository
 RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
@@ -45,6 +45,12 @@ RUN cargo pgrx package \
     --pg-config /usr/lib/postgresql/16/bin/pg_config \
     --features pg16
 
+# pgrx only generates .control and .so - copy pre-written SQL file
+RUN if [ ! -f target/release/ruvector-pg16/usr/share/postgresql/16/extension/ruvector--0.1.0.sql ]; then \
+        echo "Copying pre-written SQL file..." && \
+        cp sql/ruvector--0.1.0.sql target/release/ruvector-pg16/usr/share/postgresql/16/extension/; \
+    fi
+
 # Runtime image
 FROM postgres:16-bookworm
 
@@ -53,12 +59,12 @@ RUN apt-get update && apt-get install -y \
     libssl3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy built extension from builder (updated path for /build directory)
-COPY --from=builder /build/ruvector-postgres/target/release/ruvector_postgres-pg16/usr/share/postgresql/16/extension/* /usr/share/postgresql/16/extension/
-COPY --from=builder /build/ruvector-postgres/target/release/ruvector_postgres-pg16/usr/lib/postgresql/16/lib/* /usr/lib/postgresql/16/lib/
+# Copy built extension from builder (path uses crate name 'ruvector' not 'ruvector_postgres')
+COPY --from=builder /build/ruvector-postgres/target/release/ruvector-pg16/usr/share/postgresql/16/extension/* /usr/share/postgresql/16/extension/
+COPY --from=builder /build/ruvector-postgres/target/release/ruvector-pg16/usr/lib/postgresql/16/lib/* /usr/lib/postgresql/16/lib/
 
-# Copy initialization script
-COPY crates/ruvector-postgres/docker/init.sql /docker-entrypoint-initdb.d/
+# Copy initialization script with proper permissions
+COPY --chmod=644 crates/ruvector-postgres/docker/init.sql /docker-entrypoint-initdb.d/
 
 # Set environment variables
 ENV POSTGRES_USER=ruvector

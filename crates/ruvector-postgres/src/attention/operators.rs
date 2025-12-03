@@ -3,6 +3,7 @@
 //! SQL-callable functions for attention mechanisms in PostgreSQL.
 
 use pgrx::prelude::*;
+use pgrx::JsonB;
 use super::{Attention, AttentionType, ScaledDotAttention, MultiHeadAttention, FlashAttention, softmax};
 
 /// Compute attention score between query and key vectors
@@ -71,24 +72,37 @@ fn ruvector_softmax(scores: Vec<f32>) -> Vec<f32> {
 /// ```sql
 /// SELECT ruvector_multi_head_attention(
 ///     ARRAY[1.0, 0.0, 0.0, 0.0]::float4[],  -- query
-///     ARRAY[
-///         ARRAY[1.0, 0.0, 0.0, 0.0],
-///         ARRAY[0.0, 1.0, 0.0, 0.0]
-///     ]::float4[][],  -- keys
-///     ARRAY[
-///         ARRAY[1.0, 2.0],
-///         ARRAY[3.0, 4.0]
-///     ]::float4[][],  -- values
+///     '[[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]]'::jsonb,  -- keys
+///     '[[1.0, 2.0], [3.0, 4.0]]'::jsonb,  -- values
 ///     2  -- num_heads
 /// );
 /// ```
 #[pg_extern(immutable, parallel_safe)]
 fn ruvector_multi_head_attention(
     query: Vec<f32>,
-    keys: Vec<Vec<f32>>,
-    values: Vec<Vec<f32>>,
+    keys_json: JsonB,
+    values_json: JsonB,
     num_heads: default!(i32, 4),
 ) -> Vec<f32> {
+    // Parse keys and values from JSON
+    let keys: Vec<Vec<f32>> = match keys_json.0.as_array() {
+        Some(arr) => arr.iter()
+            .filter_map(|v| v.as_array().map(|a|
+                a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
+            ))
+            .collect(),
+        None => return Vec::new(),
+    };
+
+    let values: Vec<Vec<f32>> = match values_json.0.as_array() {
+        Some(arr) => arr.iter()
+            .filter_map(|v| v.as_array().map(|a|
+                a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
+            ))
+            .collect(),
+        None => return Vec::new(),
+    };
+
     // Validate inputs
     if query.is_empty() || keys.is_empty() || values.is_empty() {
         return Vec::new();
@@ -139,18 +153,37 @@ fn ruvector_multi_head_attention(
 /// ```sql
 /// SELECT ruvector_flash_attention(
 ///     ARRAY[1.0, 0.0, 0.0, 0.0]::float4[],
-///     ARRAY[ARRAY[1.0, 0.0, 0.0, 0.0]]::float4[][],
-///     ARRAY[ARRAY[5.0, 10.0]]::float4[][],
+///     '[[1.0, 0.0, 0.0, 0.0]]'::jsonb,
+///     '[[5.0, 10.0]]'::jsonb,
 ///     64  -- block_size
 /// );
 /// ```
 #[pg_extern(immutable, parallel_safe)]
 fn ruvector_flash_attention(
     query: Vec<f32>,
-    keys: Vec<Vec<f32>>,
-    values: Vec<Vec<f32>>,
+    keys_json: JsonB,
+    values_json: JsonB,
     block_size: default!(i32, 64),
 ) -> Vec<f32> {
+    // Parse keys and values from JSON
+    let keys: Vec<Vec<f32>> = match keys_json.0.as_array() {
+        Some(arr) => arr.iter()
+            .filter_map(|v| v.as_array().map(|a|
+                a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
+            ))
+            .collect(),
+        None => return Vec::new(),
+    };
+
+    let values: Vec<Vec<f32>> = match values_json.0.as_array() {
+        Some(arr) => arr.iter()
+            .filter_map(|v| v.as_array().map(|a|
+                a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
+            ))
+            .collect(),
+        None => return Vec::new(),
+    };
+
     // Validate inputs
     if query.is_empty() || keys.is_empty() || values.is_empty() {
         return Vec::new();
@@ -193,9 +226,9 @@ fn ruvector_attention_types() -> TableIterator<
         AttentionType::MultiHead,
         AttentionType::FlashV2,
         AttentionType::Linear,
-        AttentionType::GAT,
+        AttentionType::Gat,
         AttentionType::Sparse,
-        AttentionType::MoE,
+        AttentionType::Moe,
         AttentionType::Cross,
         AttentionType::Sliding,
         AttentionType::Poincare,
@@ -214,20 +247,26 @@ fn ruvector_attention_types() -> TableIterator<
 /// ```sql
 /// SELECT ruvector_attention_scores(
 ///     ARRAY[1.0, 0.0, 0.0]::float4[],
-///     ARRAY[
-///         ARRAY[1.0, 0.0, 0.0],
-///         ARRAY[0.0, 1.0, 0.0],
-///         ARRAY[0.0, 0.0, 1.0]
-///     ]::float4[][]
+///     '[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]'::jsonb
 /// );
 /// -- Returns array of attention scores
 /// ```
 #[pg_extern(immutable, parallel_safe)]
 fn ruvector_attention_scores(
     query: Vec<f32>,
-    keys: Vec<Vec<f32>>,
+    keys_json: JsonB,
     attention_type: default!(&str, "'scaled_dot'"),
 ) -> Vec<f32> {
+    // Parse keys from JSON
+    let keys: Vec<Vec<f32>> = match keys_json.0.as_array() {
+        Some(arr) => arr.iter()
+            .filter_map(|v| v.as_array().map(|a|
+                a.iter().filter_map(|x| x.as_f64().map(|f| f as f32)).collect()
+            ))
+            .collect(),
+        None => return Vec::new(),
+    };
+
     if query.is_empty() || keys.is_empty() {
         return Vec::new();
     }

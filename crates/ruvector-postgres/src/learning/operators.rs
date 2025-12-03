@@ -4,7 +4,8 @@ use pgrx::prelude::*;
 use pgrx::{JsonB, Spi};
 use serde::{Deserialize, Serialize};
 
-use super::{LEARNING_MANAGER, QueryTrajectory, OptimizationTarget};
+use super::{LEARNING_MANAGER, QueryTrajectory};
+use super::optimizer::OptimizationTarget;
 use std::time::SystemTime;
 
 /// Configuration for enabling learning
@@ -151,17 +152,14 @@ fn ruvector_learning_stats(
 /// SELECT ruvector_auto_tune(
 ///     'my_table',
 ///     'balanced',
-///     ARRAY[
-///         ARRAY[0.1, 0.2, 0.3],
-///         ARRAY[0.4, 0.5, 0.6]
-///     ]
+///     '[[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]'::jsonb
 /// );
 /// ```
 #[pg_extern]
 fn ruvector_auto_tune(
     table_name: &str,
     optimize_for: default!(&str, "'balanced'"),
-    sample_queries: Option<Vec<Vec<f32>>>,
+    sample_queries: Option<JsonB>,
 ) -> Result<JsonB, Box<dyn std::error::Error + Send + Sync>> {
     let optimizer = LEARNING_MANAGER.get_optimizer(table_name)
         .ok_or_else(|| format!("Learning not enabled for table: {}", table_name))?;
@@ -177,15 +175,23 @@ fn ruvector_auto_tune(
 
     let mut recommendations = Vec::new();
 
-    if let Some(queries) = sample_queries {
-        // Optimize for provided sample queries
-        for query in queries {
-            let params = optimizer.optimize_with_target(&query, target);
-            recommendations.push(serde_json::json!({
-                "ef_search": params.ef_search,
-                "probes": params.probes,
-                "confidence": params.confidence,
-            }));
+    if let Some(JsonB(json_val)) = sample_queries {
+        // Parse JSON array of arrays as Vec<Vec<f32>>
+        if let Some(queries_array) = json_val.as_array() {
+            for query_val in queries_array {
+                if let Some(query_array) = query_val.as_array() {
+                    let query: Vec<f32> = query_array
+                        .iter()
+                        .filter_map(|v| v.as_f64().map(|f| f as f32))
+                        .collect();
+                    let params = optimizer.optimize_with_target(&query, target);
+                    recommendations.push(serde_json::json!({
+                        "ef_search": params.ef_search,
+                        "probes": params.probes,
+                        "confidence": params.confidence,
+                    }));
+                }
+            }
         }
     }
 

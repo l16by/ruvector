@@ -78,8 +78,7 @@ impl ReasoningBank {
 
     /// Get a specific pattern by ID
     pub fn get(&self, id: usize) -> Option<LearnedPattern> {
-        self.patterns.get(&id).map(|entry| {
-            let mut entry = entry;
+        self.patterns.get_mut(&id).map(|mut entry| {
             entry.usage_count += 1;
             entry.last_used = SystemTime::now();
             entry.pattern.clone()

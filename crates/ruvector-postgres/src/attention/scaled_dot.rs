@@ -60,9 +60,9 @@ impl ScaledDotAttention {
     #[inline]
     fn dot_product(&self, a: &[f32], b: &[f32]) -> f32 {
         if self.use_simd && a.len() == b.len() {
-            // Try SIMD first
-            if let Ok(result) = f32::dot(a, b) {
-                return result;
+            // Try SIMD first - simsimd returns Option<f64>
+            if let Some(result) = f32::dot(a, b) {
+                return result as f32;
             }
         }
 

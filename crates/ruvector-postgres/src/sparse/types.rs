@@ -17,7 +17,7 @@ pub enum SparseError {
     #[error("Parse error: {0}")]
     ParseError(String),
 
-    #[error("Invalid format: expected '{idx:val, ...}'")]
+    #[error("Invalid format: expected '{{idx:val, ...}}'")]
     InvalidFormat,
 
     #[error("Empty sparse vector")]
