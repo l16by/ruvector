@@ -196,58 +196,23 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "Publishing version: $VERSION"
-
-          # Create npm directory
           mkdir -p npm
 
-          # Function to create and publish platform package
           publish_platform() {
             local name=$1
             local node_file=$2
             local os_val=$3
             local cpu_val=$4
             local libc_val=$5
-
             if [ -f "$node_file" ]; then
               local dir_name=$(echo "$name" | sed 's/@ruvector\/sona-//')
               mkdir -p "npm/$dir_name"
               cp "$node_file" "npm/$dir_name/"
-
               if [ -n "$libc_val" ]; then
-                cat > "npm/$dir_name/package.json" << PKGJSON
-{
-  "name": "$name",
-  "version": "$VERSION",
-  "os": ["$os_val"],
-  "cpu": ["$cpu_val"],
-  "libc": ["$libc_val"],
-  "main": "$node_file",
-  "files": ["$node_file"],
-  "license": "MIT OR Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ruvnet/ruvector.git"
-  }
-}
-PKGJSON
+                node -e "require('fs').writeFileSync('npm/$dir_name/package.json', JSON.stringify({name:'$name',version:'$VERSION',os:['$os_val'],cpu:['$cpu_val'],libc:['$libc_val'],main:'$node_file',files:['$node_file'],license:'MIT OR Apache-2.0',repository:{type:'git',url:'https://github.com/ruvnet/ruvector.git'}},null,2))"
               else
-                cat > "npm/$dir_name/package.json" << PKGJSON
-{
-  "name": "$name",
-  "version": "$VERSION",
-  "os": ["$os_val"],
-  "cpu": ["$cpu_val"],
-  "main": "$node_file",
-  "files": ["$node_file"],
-  "license": "MIT OR Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ruvnet/ruvector.git"
-  }
-}
-PKGJSON
+                node -e "require('fs').writeFileSync('npm/$dir_name/package.json', JSON.stringify({name:'$name',version:'$VERSION',os:['$os_val'],cpu:['$cpu_val'],main:'$node_file',files:['$node_file'],license:'MIT OR Apache-2.0',repository:{type:'git',url:'https://github.com/ruvnet/ruvector.git'}},null,2))"
               fi
-
               echo "Publishing $name..."
               cd "npm/$dir_name"
               npm publish --access public || echo "Warning: $name may already exist"
@@ -255,7 +220,6 @@ PKGJSON
             fi
           }
 
-          # Publish all platform packages
           publish_platform "@ruvector/sona-linux-x64-gnu" "sona.linux-x64-gnu.node" "linux" "x64" ""
           publish_platform "@ruvector/sona-linux-x64-musl" "sona.linux-x64-musl.node" "linux" "x64" "musl"
           publish_platform "@ruvector/sona-linux-arm64-gnu" "sona.linux-arm64-gnu.node" "linux" "arm64" ""
@@ -263,7 +227,6 @@ PKGJSON
           publish_platform "@ruvector/sona-darwin-arm64" "sona.darwin-arm64.node" "darwin" "arm64" ""
           publish_platform "@ruvector/sona-win32-x64-msvc" "sona.win32-x64-msvc.node" "win32" "x64" ""
           publish_platform "@ruvector/sona-win32-arm64-msvc" "sona.win32-arm64-msvc.node" "win32" "arm64" ""
-
           echo "=== Platform packages published ==="
 
       - name: Update main package with optionalDependencies
