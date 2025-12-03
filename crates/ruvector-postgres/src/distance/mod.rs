@@ -6,11 +6,11 @@
 //! - ARM NEON support (4 floats per operation)
 //! - Scalar fallback for all platforms
 
-mod simd;
 mod scalar;
+mod simd;
 
-pub use simd::*;
 pub use scalar::*;
+pub use simd::*;
 
 use std::sync::OnceLock;
 
@@ -138,7 +138,10 @@ pub fn simd_info() -> &'static str {
 
 /// Get detailed SIMD info
 pub fn simd_info_detailed() -> String {
-    let cap = SIMD_CAPABILITY.get().copied().unwrap_or(SimdCapability::Scalar);
+    let cap = SIMD_CAPABILITY
+        .get()
+        .copied()
+        .unwrap_or(SimdCapability::Scalar);
 
     #[cfg(target_arch = "x86_64")]
     {
@@ -175,9 +178,7 @@ pub fn simd_info_detailed() -> String {
 
     #[cfg(target_arch = "aarch64")]
     {
-        return format!(
-            "architecture: aarch64, active: neon, floats_per_op: 4"
-        );
+        return format!("architecture: aarch64, active: neon, floats_per_op: 4");
     }
 
     #[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
@@ -262,11 +263,7 @@ pub fn cosine_distance_normalized(a: &[f32], b: &[f32]) -> f32 {
 }
 
 /// Batch distance calculation with parallelism
-pub fn batch_distances(
-    query: &[f32],
-    vectors: &[&[f32]],
-    metric: DistanceMetric,
-) -> Vec<f32> {
+pub fn batch_distances(query: &[f32], vectors: &[&[f32]], metric: DistanceMetric) -> Vec<f32> {
     use rayon::prelude::*;
 
     vectors

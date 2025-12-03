@@ -3,10 +3,10 @@
 //! Stores vectors with 8 bits per dimension (4x compression).
 //! Uses int8 SIMD operations for fast approximate distance computation.
 
-use pgrx::prelude::*;
 use pgrx::pgrx_sql_entity_graph::metadata::{
     ArgumentError, Returns, ReturnsError, SqlMapping, SqlTranslatable,
 };
+use pgrx::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -359,10 +359,8 @@ impl FromStr for ScalarVec {
             });
         }
 
-        let values: Result<Vec<f32>, _> = inner
-            .split(',')
-            .map(|v| v.trim().parse::<f32>())
-            .collect();
+        let values: Result<Vec<f32>, _> =
+            inner.split(',').map(|v| v.trim().parse::<f32>()).collect();
 
         match values {
             Ok(data) => Ok(Self::from_f32(&data)),

@@ -2,7 +2,7 @@
 //!
 //! Compare SIMD vs scalar implementations across different vector sizes
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 
@@ -98,25 +98,16 @@ fn bench_euclidean(c: &mut Criterion) {
     for dims in [128, 384, 768, 1536, 3072].iter() {
         let (a, b) = generate_vectors(1, *dims, 42);
 
-        group.bench_with_input(
-            BenchmarkId::new("scalar", dims),
-            dims,
-            |bench, _| {
-                bench.iter(|| distance_impl::euclidean_scalar(black_box(&a), black_box(&b)))
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("scalar", dims), dims, |bench, _| {
+            bench.iter(|| distance_impl::euclidean_scalar(black_box(&a), black_box(&b)))
+        });
 
         #[cfg(target_arch = "x86_64")]
         if is_x86_feature_detected!("avx2") {
-            group.bench_with_input(
-                BenchmarkId::new("avx2", dims),
-                dims,
-                |bench, _| {
-                    bench.iter(|| unsafe {
-                        distance_impl::euclidean_avx2(black_box(&a), black_box(&b))
-                    })
-                },
-            );
+            group.bench_with_input(BenchmarkId::new("avx2", dims), dims, |bench, _| {
+                bench
+                    .iter(|| unsafe { distance_impl::euclidean_avx2(black_box(&a), black_box(&b)) })
+            });
         }
     }
 
@@ -129,13 +120,9 @@ fn bench_cosine(c: &mut Criterion) {
     for dims in [128, 384, 768, 1536].iter() {
         let (a, b) = generate_vectors(1, *dims, 42);
 
-        group.bench_with_input(
-            BenchmarkId::new("scalar", dims),
-            dims,
-            |bench, _| {
-                bench.iter(|| distance_impl::cosine_scalar(black_box(&a), black_box(&b)))
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("scalar", dims), dims, |bench, _| {
+            bench.iter(|| distance_impl::cosine_scalar(black_box(&a), black_box(&b)))
+        });
     }
 
     group.finish();
@@ -147,13 +134,9 @@ fn bench_inner_product(c: &mut Criterion) {
     for dims in [128, 384, 768, 1536].iter() {
         let (a, b) = generate_vectors(1, *dims, 42);
 
-        group.bench_with_input(
-            BenchmarkId::new("scalar", dims),
-            dims,
-            |bench, _| {
-                bench.iter(|| distance_impl::inner_product_scalar(black_box(&a), black_box(&b)))
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("scalar", dims), dims, |bench, _| {
+            bench.iter(|| distance_impl::inner_product_scalar(black_box(&a), black_box(&b)))
+        });
     }
 
     group.finish();
@@ -169,18 +152,14 @@ fn bench_batch(c: &mut Criterion) {
             .map(|_| (0..*dims).map(|_| rng.gen_range(-1.0..1.0)).collect())
             .collect();
 
-        group.bench_with_input(
-            BenchmarkId::new("sequential", dims),
-            dims,
-            |bench, _| {
-                bench.iter(|| {
-                    vectors
-                        .iter()
-                        .map(|v| distance_impl::euclidean_scalar(black_box(&query), black_box(v)))
-                        .collect::<Vec<_>>()
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("sequential", dims), dims, |bench, _| {
+            bench.iter(|| {
+                vectors
+                    .iter()
+                    .map(|v| distance_impl::euclidean_scalar(black_box(&query), black_box(v)))
+                    .collect::<Vec<_>>()
+            })
+        });
 
         group.bench_with_input(
             BenchmarkId::new("parallel_rayon", dims),
@@ -200,5 +179,11 @@ fn bench_batch(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_euclidean, bench_cosine, bench_inner_product, bench_batch);
+criterion_group!(
+    benches,
+    bench_euclidean,
+    bench_cosine,
+    bench_inner_product,
+    bench_batch
+);
 criterion_main!(benches);

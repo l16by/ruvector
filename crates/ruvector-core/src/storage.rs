@@ -84,7 +84,7 @@ impl VectorStorage {
                             std::path::Component::ParentDir => {
                                 if !normalized.pop() || !normalized.starts_with(&cwd) {
                                     return Err(RuvectorError::InvalidPath(
-                                        "Path traversal attempt detected".to_string()
+                                        "Path traversal attempt detected".to_string(),
                                     ));
                                 }
                             }

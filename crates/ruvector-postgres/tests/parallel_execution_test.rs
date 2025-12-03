@@ -2,9 +2,9 @@
 
 #[cfg(test)]
 mod parallel_tests {
-    use ruvector_postgres::index::parallel::*;
-    use ruvector_postgres::index::hnsw::{HnswIndex, HnswConfig};
     use ruvector_postgres::distance::DistanceMetric;
+    use ruvector_postgres::index::hnsw::{HnswConfig, HnswIndex};
+    use ruvector_postgres::index::parallel::*;
 
     #[test]
     fn test_parallel_worker_estimation() {
@@ -14,7 +14,10 @@ mod parallel_tests {
 
         // Medium index - some workers
         let workers = ruhnsw_estimate_parallel_workers(2000, 100000, 10, 40);
-        assert!(workers > 0 && workers <= 4, "Medium indexes should use 1-4 workers");
+        assert!(
+            workers > 0 && workers <= 4,
+            "Medium indexes should use 1-4 workers"
+        );
 
         // Large index - more workers
         let workers = ruhnsw_estimate_parallel_workers(10000, 1000000, 10, 40);
@@ -33,7 +36,10 @@ mod parallel_tests {
     fn test_partition_estimation() {
         // Should create more partitions than workers for load balancing
         let partitions = estimate_partitions(4, 100000);
-        assert!(partitions >= 4, "Should have at least as many partitions as workers");
+        assert!(
+            partitions >= 4,
+            "Should have at least as many partitions as workers"
+        );
         assert!(partitions <= 50, "Should not create too many partitions");
 
         // Large dataset should create more partitions
@@ -127,10 +133,7 @@ mod parallel_tests {
             (0.9, ItemPointer::new(1, 9)),
         ];
 
-        let worker2 = vec![
-            (0.2, ItemPointer::new(2, 2)),
-            (0.6, ItemPointer::new(2, 6)),
-        ];
+        let worker2 = vec![(0.2, ItemPointer::new(2, 2)), (0.6, ItemPointer::new(2, 6))];
 
         let worker3 = vec![
             (0.3, ItemPointer::new(3, 3)),
@@ -164,21 +167,17 @@ mod parallel_tests {
 
         // Insert some test vectors
         for i in 0..100 {
-            let vector = vec![
-                (i as f32) * 0.1,
-                (i as f32) * 0.2,
-                (i as f32) * 0.3,
-            ];
+            let vector = vec![(i as f32) * 0.1, (i as f32) * 0.2, (i as f32) * 0.3];
             index.insert(vector);
         }
 
         // Create parallel coordinator
         let mut coordinator = ParallelScanCoordinator::new(
-            2,   // 2 workers
-            4,   // 4 partitions
-            3,   // 3 dimensions
-            10,  // k=10
-            20,  // ef_search=20
+            2,  // 2 workers
+            4,  // 4 partitions
+            3,  // 3 dimensions
+            10, // k=10
+            20, // ef_search=20
             DistanceMetric::Euclidean,
         );
 
@@ -242,13 +241,10 @@ mod parallel_tests {
     #[test]
     fn test_merge_with_duplicates() {
         // Test that merging handles duplicate ItemPointers correctly
-        let worker1 = vec![
-            (0.1, ItemPointer::new(1, 1)),
-            (0.3, ItemPointer::new(1, 3)),
-        ];
+        let worker1 = vec![(0.1, ItemPointer::new(1, 1)), (0.3, ItemPointer::new(1, 3))];
 
         let worker2 = vec![
-            (0.1, ItemPointer::new(1, 1)),  // Duplicate
+            (0.1, ItemPointer::new(1, 1)), // Duplicate
             (0.2, ItemPointer::new(2, 2)),
         ];
 
@@ -261,14 +257,9 @@ mod parallel_tests {
     #[test]
     fn test_large_k_merge() {
         // Test merging with k larger than available results
-        let worker1 = vec![
-            (0.1, ItemPointer::new(1, 1)),
-            (0.2, ItemPointer::new(1, 2)),
-        ];
+        let worker1 = vec![(0.1, ItemPointer::new(1, 1)), (0.2, ItemPointer::new(1, 2))];
 
-        let worker2 = vec![
-            (0.3, ItemPointer::new(2, 3)),
-        ];
+        let worker2 = vec![(0.3, ItemPointer::new(2, 3))];
 
         let merged = merge_knn_results(&[worker1, worker2], 100);
 
@@ -278,11 +269,15 @@ mod parallel_tests {
 
     #[test]
     fn test_parallel_scan_descriptor() {
-        use std::sync::Arc;
         use parking_lot::RwLock;
+        use std::sync::Arc;
 
         let shared_state = Arc::new(RwLock::new(RuHnswSharedState::new(
-            2, 4, 128, 10, 40,
+            2,
+            4,
+            128,
+            10,
+            40,
             DistanceMetric::Euclidean,
         )));
 
@@ -296,10 +291,7 @@ mod parallel_tests {
 
     #[test]
     fn test_metrics_in_parallel_state() {
-        let state = RuHnswSharedState::new(
-            3, 9, 256, 50, 100,
-            DistanceMetric::Cosine,
-        );
+        let state = RuHnswSharedState::new(3, 9, 256, 50, 100, DistanceMetric::Cosine);
 
         assert_eq!(state.num_workers, 3);
         assert_eq!(state.total_partitions, 9);
@@ -309,7 +301,12 @@ mod parallel_tests {
         assert_eq!(state.metric, DistanceMetric::Cosine);
 
         // Test completion tracking
-        assert_eq!(state.completed_workers.load(std::sync::atomic::Ordering::SeqCst), 0);
+        assert_eq!(
+            state
+                .completed_workers
+                .load(std::sync::atomic::Ordering::SeqCst),
+            0
+        );
         assert!(!state.all_completed());
 
         state.mark_completed();

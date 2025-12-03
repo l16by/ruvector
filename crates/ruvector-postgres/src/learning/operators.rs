@@ -4,8 +4,8 @@ use pgrx::prelude::*;
 use pgrx::{JsonB, Spi};
 use serde::{Deserialize, Serialize};
 
-use super::{LEARNING_MANAGER, QueryTrajectory};
 use super::optimizer::OptimizationTarget;
+use super::{QueryTrajectory, LEARNING_MANAGER};
 use std::time::SystemTime;
 
 /// Configuration for enabling learning
@@ -22,8 +22,12 @@ pub struct LearningConfig {
     pub auto_tune_interval: u64,
 }
 
-fn default_max_trajectories() -> usize { 1000 }
-fn default_num_clusters() -> usize { 10 }
+fn default_max_trajectories() -> usize {
+    1000
+}
+fn default_num_clusters() -> usize {
+    10
+}
 
 impl Default for LearningConfig {
     fn default() -> Self {
@@ -79,7 +83,8 @@ fn ruvector_record_feedback(
     relevant_ids: Vec<i64>,
     irrelevant_ids: Vec<i64>,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let tracker = LEARNING_MANAGER.get_tracker(table_name)
+    let tracker = LEARNING_MANAGER
+        .get_tracker(table_name)
         .ok_or_else(|| format!("Learning not enabled for table: {}", table_name))?;
 
     // Find the most recent trajectory matching this query
@@ -116,10 +121,12 @@ fn ruvector_record_feedback(
 fn ruvector_learning_stats(
     table_name: &str,
 ) -> Result<JsonB, Box<dyn std::error::Error + Send + Sync>> {
-    let tracker = LEARNING_MANAGER.get_tracker(table_name)
+    let tracker = LEARNING_MANAGER
+        .get_tracker(table_name)
         .ok_or_else(|| format!("Learning not enabled for table: {}", table_name))?;
 
-    let bank = LEARNING_MANAGER.get_reasoning_bank(table_name)
+    let bank = LEARNING_MANAGER
+        .get_reasoning_bank(table_name)
         .ok_or_else(|| format!("ReasoningBank not found for table: {}", table_name))?;
 
     let trajectory_stats = tracker.stats();
@@ -161,7 +168,8 @@ fn ruvector_auto_tune(
     optimize_for: default!(&str, "'balanced'"),
     sample_queries: Option<JsonB>,
 ) -> Result<JsonB, Box<dyn std::error::Error + Send + Sync>> {
-    let optimizer = LEARNING_MANAGER.get_optimizer(table_name)
+    let optimizer = LEARNING_MANAGER
+        .get_optimizer(table_name)
         .ok_or_else(|| format!("Learning not enabled for table: {}", table_name))?;
 
     let target = match optimize_for {
@@ -216,7 +224,8 @@ fn ruvector_consolidate_patterns(
     table_name: &str,
     similarity_threshold: default!(f64, 0.9),
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let bank = LEARNING_MANAGER.get_reasoning_bank(table_name)
+    let bank = LEARNING_MANAGER
+        .get_reasoning_bank(table_name)
         .ok_or_else(|| format!("Learning not enabled for table: {}", table_name))?;
 
     let merged = bank.consolidate(similarity_threshold);
@@ -240,7 +249,8 @@ fn ruvector_prune_patterns(
     min_usage: default!(i32, 5),
     min_confidence: default!(f64, 0.5),
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let bank = LEARNING_MANAGER.get_reasoning_bank(table_name)
+    let bank = LEARNING_MANAGER
+        .get_reasoning_bank(table_name)
         .ok_or_else(|| format!("Learning not enabled for table: {}", table_name))?;
 
     let pruned = bank.prune(min_usage as usize, min_confidence);
@@ -263,7 +273,8 @@ fn ruvector_get_search_params(
     table_name: &str,
     query_vector: Vec<f32>,
 ) -> Result<JsonB, Box<dyn std::error::Error + Send + Sync>> {
-    let optimizer = LEARNING_MANAGER.get_optimizer(table_name)
+    let optimizer = LEARNING_MANAGER
+        .get_optimizer(table_name)
         .ok_or_else(|| format!("Learning not enabled for table: {}", table_name))?;
 
     let params = optimizer.optimize(&query_vector);
@@ -289,10 +300,8 @@ fn ruvector_extract_patterns(
     table_name: &str,
     num_clusters: default!(i32, 10),
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let patterns_extracted = LEARNING_MANAGER.extract_patterns(
-        table_name,
-        num_clusters as usize,
-    )?;
+    let patterns_extracted =
+        LEARNING_MANAGER.extract_patterns(table_name, num_clusters as usize)?;
 
     Ok(format!(
         "Extracted {} patterns from trajectories using {} clusters",
@@ -325,7 +334,8 @@ fn ruvector_record_trajectory(
     ef_search: i32,
     probes: i32,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let tracker = LEARNING_MANAGER.get_tracker(table_name)
+    let tracker = LEARNING_MANAGER
+        .get_tracker(table_name)
         .ok_or_else(|| format!("Learning not enabled for table: {}", table_name))?;
 
     let trajectory = QueryTrajectory::new(
@@ -338,7 +348,10 @@ fn ruvector_record_trajectory(
 
     tracker.record(trajectory);
 
-    Ok(format!("Trajectory recorded for {} results", result_ids.len()))
+    Ok(format!(
+        "Trajectory recorded for {} results",
+        result_ids.len()
+    ))
 }
 
 /// Clear all learning data for a table
@@ -352,12 +365,16 @@ fn ruvector_record_trajectory(
 fn ruvector_clear_learning(
     table_name: &str,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let bank = LEARNING_MANAGER.get_reasoning_bank(table_name)
+    let bank = LEARNING_MANAGER
+        .get_reasoning_bank(table_name)
         .ok_or_else(|| format!("Learning not enabled for table: {}", table_name))?;
 
     bank.clear();
 
-    Ok(format!("Cleared all learning data for table '{}'", table_name))
+    Ok(format!(
+        "Cleared all learning data for table '{}'",
+        table_name
+    ))
 }
 
 #[cfg(any(test, feature = "pg_test"))]
@@ -407,7 +424,8 @@ mod tests {
                 1000 + i * 100,
                 50,
                 10,
-            ).unwrap();
+            )
+            .unwrap();
         }
 
         let result = ruvector_extract_patterns("test_patterns", Some(5));
@@ -427,14 +445,11 @@ mod tests {
                 1000,
                 50,
                 10,
-            ).unwrap();
+            )
+            .unwrap();
         }
 
-        let result = ruvector_auto_tune(
-            "test_autotune",
-            Some("balanced"),
-            None,
-        );
+        let result = ruvector_auto_tune("test_autotune", Some("balanced"), None);
 
         assert!(result.is_ok());
     }
@@ -452,15 +467,13 @@ mod tests {
                 1000,
                 50,
                 10,
-            ).unwrap();
+            )
+            .unwrap();
         }
 
         ruvector_extract_patterns("test_search_params", Some(3)).unwrap();
 
-        let result = ruvector_get_search_params(
-            "test_search_params",
-            vec![5.0, 0.0],
-        );
+        let result = ruvector_get_search_params("test_search_params", vec![5.0, 0.0]);
 
         assert!(result.is_ok());
     }
@@ -478,7 +491,8 @@ mod tests {
                 1000,
                 50,
                 10,
-            ).unwrap();
+            )
+            .unwrap();
         }
 
         ruvector_extract_patterns("test_consolidate", Some(10)).unwrap();
@@ -493,14 +507,8 @@ mod tests {
 
         // Record trajectories and extract patterns
         for i in 0..20 {
-            ruvector_record_trajectory(
-                "test_prune",
-                vec![i as f32, 0.0],
-                vec![i],
-                1000,
-                50,
-                10,
-            ).unwrap();
+            ruvector_record_trajectory("test_prune", vec![i as f32, 0.0], vec![i], 1000, 50, 10)
+                .unwrap();
         }
 
         ruvector_extract_patterns("test_prune", Some(5)).unwrap();
@@ -513,14 +521,7 @@ mod tests {
     fn test_clear_learning() {
         ruvector_enable_learning("test_clear", None).unwrap();
 
-        ruvector_record_trajectory(
-            "test_clear",
-            vec![1.0, 2.0],
-            vec![1],
-            1000,
-            50,
-            10,
-        ).unwrap();
+        ruvector_record_trajectory("test_clear", vec![1.0, 2.0], vec![1], 1000, 50, 10).unwrap();
 
         let result = ruvector_clear_learning("test_clear");
         assert!(result.is_ok());

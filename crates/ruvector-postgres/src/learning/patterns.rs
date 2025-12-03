@@ -129,7 +129,8 @@ impl PatternExtractor {
             let mut distances = Vec::with_capacity(trajectories.len());
 
             for traj in trajectories {
-                let min_dist = centroids.iter()
+                let min_dist = centroids
+                    .iter()
                     .map(|c| self.euclidean_distance(&traj.query_vector, c))
                     .min_by(|a, b| a.partial_cmp(b).unwrap())
                     .unwrap_or(0.0);
@@ -137,7 +138,8 @@ impl PatternExtractor {
             }
 
             // Select point with maximum distance
-            let idx = distances.iter()
+            let idx = distances
+                .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
                 .map(|(i, _)| i)
@@ -151,7 +153,8 @@ impl PatternExtractor {
 
     /// Find closest centroid index
     fn find_closest_centroid(&self, point: &[f32], centroids: &[Vec<f32>]) -> usize {
-        centroids.iter()
+        centroids
+            .iter()
             .enumerate()
             .map(|(i, c)| (i, self.euclidean_distance(point, c)))
             .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
@@ -197,7 +200,8 @@ impl PatternExtractor {
         let mut patterns = Vec::new();
 
         for cluster_id in 0..self.k {
-            let cluster_trajs: Vec<&QueryTrajectory> = trajectories.iter()
+            let cluster_trajs: Vec<&QueryTrajectory> = trajectories
+                .iter()
                 .zip(assignments)
                 .filter(|(_, &a)| a == cluster_id)
                 .map(|(t, _)| t)
@@ -216,9 +220,7 @@ impl PatternExtractor {
             let avg_latency = cluster_trajs.iter().map(|t| t.latency_us).sum::<u64>() as f64
                 / sample_count as f64;
 
-            let precisions: Vec<f64> = cluster_trajs.iter()
-                .filter_map(|t| t.precision())
-                .collect();
+            let precisions: Vec<f64> = cluster_trajs.iter().filter_map(|t| t.precision()).collect();
             let avg_precision = if !precisions.is_empty() {
                 Some(precisions.iter().sum::<f64>() / precisions.len() as f64)
             } else {
@@ -245,9 +247,7 @@ impl PatternExtractor {
     /// Calculate optimal ef_search for cluster
     fn calculate_optimal_ef(&self, trajectories: &[&QueryTrajectory]) -> usize {
         // Use median ef_search weighted by precision/latency trade-off
-        let mut efs: Vec<_> = trajectories.iter()
-            .map(|t| t.ef_search)
-            .collect();
+        let mut efs: Vec<_> = trajectories.iter().map(|t| t.ef_search).collect();
         efs.sort_unstable();
 
         if efs.is_empty() {
@@ -259,9 +259,7 @@ impl PatternExtractor {
 
     /// Calculate optimal probes for cluster
     fn calculate_optimal_probes(&self, trajectories: &[&QueryTrajectory]) -> usize {
-        let mut probes: Vec<_> = trajectories.iter()
-            .map(|t| t.probes)
-            .collect();
+        let mut probes: Vec<_> = trajectories.iter().map(|t| t.probes).collect();
         probes.sort_unstable();
 
         if probes.is_empty() {
@@ -280,7 +278,10 @@ impl PatternExtractor {
 
         // Consistency of parameters
         let ef_variance = self.calculate_variance(
-            &trajectories.iter().map(|t| t.ef_search as f64).collect::<Vec<_>>()
+            &trajectories
+                .iter()
+                .map(|t| t.ef_search as f64)
+                .collect::<Vec<_>>(),
         );
         let consistency = 1.0 / (1.0 + ef_variance);
 
@@ -295,9 +296,7 @@ impl PatternExtractor {
         }
 
         let mean = values.iter().sum::<f64>() / values.len() as f64;
-        let variance = values.iter()
-            .map(|x| (x - mean).powi(2))
-            .sum::<f64>() / values.len() as f64;
+        let variance = values.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / values.len() as f64;
 
         variance
     }
@@ -318,15 +317,8 @@ mod tests {
 
     #[test]
     fn test_pattern_similarity() {
-        let pattern = LearnedPattern::new(
-            vec![1.0, 0.0, 0.0],
-            50,
-            10,
-            0.9,
-            100,
-            1000.0,
-            Some(0.95),
-        );
+        let pattern =
+            LearnedPattern::new(vec![1.0, 0.0, 0.0], 50, 10, 0.9, 100, 1000.0, Some(0.95));
 
         let query1 = vec![1.0, 0.0, 0.0]; // Same direction
         let query2 = vec![0.0, 1.0, 0.0]; // Perpendicular

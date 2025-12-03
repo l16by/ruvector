@@ -2,26 +2,15 @@
 //!
 //! Implements attention mechanisms in hyperbolic space using the Poincaré ball model.
 
-pub mod poincare;
 pub mod hyperbolic_attention;
 pub mod mixed_curvature;
+pub mod poincare;
 
 pub use poincare::{
-    poincare_distance,
-    mobius_add,
-    mobius_scalar_mult,
-    exp_map,
-    log_map,
+    exp_map, frechet_mean, log_map, mobius_add, mobius_scalar_mult, poincare_distance,
     project_to_ball,
-    frechet_mean,
 };
 
-pub use hyperbolic_attention::{
-    HyperbolicAttention,
-    HyperbolicAttentionConfig,
-};
+pub use hyperbolic_attention::{HyperbolicAttention, HyperbolicAttentionConfig};
 
-pub use mixed_curvature::{
-    MixedCurvatureAttention,
-    MixedCurvatureConfig,
-};
+pub use mixed_curvature::{MixedCurvatureAttention, MixedCurvatureConfig};

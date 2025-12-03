@@ -10,22 +10,22 @@ use pgrx::{GucContext, GucFlags, GucRegistry, GucSetting};
 ::pgrx::pg_module_magic!();
 
 // Module declarations
-pub mod types;
-pub mod distance;
-pub mod index;
-pub mod quantization;
-pub mod operators;
 pub mod attention;
-pub mod sparse;
+pub mod distance;
 pub mod gnn;
-pub mod routing;
-pub mod learning;
 pub mod graph;
 pub mod hyperbolic;
+pub mod index;
+pub mod learning;
+pub mod operators;
+pub mod quantization;
+pub mod routing;
+pub mod sparse;
+pub mod types;
 
 // Re-exports for convenience
+pub use distance::{cosine_distance, euclidean_distance, inner_product_distance, DistanceMetric};
 pub use types::RuVector;
-pub use distance::{DistanceMetric, euclidean_distance, cosine_distance, inner_product_distance};
 
 /// Extension version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

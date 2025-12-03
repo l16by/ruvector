@@ -3,10 +3,10 @@
 //! Stores vectors using product quantization with precomputed codebooks.
 //! Achieves 8-32x compression with ADC (Asymmetric Distance Computation).
 
-use pgrx::prelude::*;
 use pgrx::pgrx_sql_entity_graph::metadata::{
     ArgumentError, Returns, ReturnsError, SqlMapping, SqlTranslatable,
 };
+use pgrx::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -40,11 +40,7 @@ impl ProductVec {
     /// Create a new ProductVec
     pub fn new(original_dims: u16, m: u8, k: u8, codes: Vec<u8>) -> Self {
         if codes.len() != m as usize {
-            pgrx::error!(
-                "ProductVec codes length {} must match m={}",
-                codes.len(),
-                m
-            );
+            pgrx::error!("ProductVec codes length {} must match m={}", codes.len(), m);
         }
 
         if original_dims as usize > MAX_DIMENSIONS {
@@ -451,10 +447,10 @@ mod tests {
 
         // Create a simple distance table: [4 subspaces][4 centroids]
         let table: Vec<Vec<f32>> = vec![
-            vec![0.0, 1.0, 4.0, 9.0],   // subspace 0
-            vec![0.0, 1.0, 4.0, 9.0],   // subspace 1
-            vec![0.0, 1.0, 4.0, 9.0],   // subspace 2
-            vec![0.0, 1.0, 4.0, 9.0],   // subspace 3
+            vec![0.0, 1.0, 4.0, 9.0], // subspace 0
+            vec![0.0, 1.0, 4.0, 9.0], // subspace 1
+            vec![0.0, 1.0, 4.0, 9.0], // subspace 2
+            vec![0.0, 1.0, 4.0, 9.0], // subspace 3
         ];
 
         let dist = pq.adc_distance(&table);
@@ -469,10 +465,10 @@ mod tests {
 
         // Flat table: 4 subspaces * 4 centroids = 16 values
         let flat_table = vec![
-            0.0, 1.0, 4.0, 9.0,  // subspace 0
-            0.0, 1.0, 4.0, 9.0,  // subspace 1
-            0.0, 1.0, 4.0, 9.0,  // subspace 2
-            0.0, 1.0, 4.0, 9.0,  // subspace 3
+            0.0, 1.0, 4.0, 9.0, // subspace 0
+            0.0, 1.0, 4.0, 9.0, // subspace 1
+            0.0, 1.0, 4.0, 9.0, // subspace 2
+            0.0, 1.0, 4.0, 9.0, // subspace 3
         ];
 
         let dist = pq.adc_distance_flat(&flat_table);

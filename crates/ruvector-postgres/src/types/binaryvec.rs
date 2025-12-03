@@ -3,10 +3,10 @@
 //! Stores vectors with 1 bit per dimension (32x compression).
 //! Uses Hamming distance with SIMD popcount acceleration.
 
-use pgrx::prelude::*;
 use pgrx::pgrx_sql_entity_graph::metadata::{
     ArgumentError, Returns, ReturnsError, SqlMapping, SqlTranslatable,
 };
+use pgrx::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -221,8 +221,8 @@ unsafe fn hamming_distance_avx2(a: &[u8], b: &[u8]) -> u32 {
         // Use lookup table for popcount (AVX2 doesn't have native popcount)
         let low_mask = _mm256_set1_epi8(0x0f);
         let pop_cnt_lut = _mm256_setr_epi8(
-            0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
-            0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
+            0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2,
+            3, 3, 4,
         );
 
         let lo = _mm256_and_si256(xor, low_mask);
@@ -315,10 +315,8 @@ impl FromStr for BinaryVec {
             });
         }
 
-        let values: Result<Vec<f32>, _> = inner
-            .split(',')
-            .map(|v| v.trim().parse::<f32>())
-            .collect();
+        let values: Result<Vec<f32>, _> =
+            inner.split(',').map(|v| v.trim().parse::<f32>()).collect();
 
         match values {
             Ok(data) => Ok(Self::from_f32(&data)),

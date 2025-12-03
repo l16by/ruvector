@@ -2,13 +2,13 @@
 //!
 //! Create and manage multiple specialized agents.
 
+use super::metrics::TrainingMetrics;
+use super::templates::{AgentType, TrainingTemplate};
 use crate::engine::SonaEngine;
 use crate::types::SonaConfig;
-use super::templates::{TrainingTemplate, AgentType};
-use super::metrics::TrainingMetrics;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use serde::{Deserialize, Serialize};
 
 /// Handle to a managed agent
 #[derive(Clone, Debug)]
@@ -130,7 +130,11 @@ impl AgentFactory {
     }
 
     /// Create an agent from a template
-    pub fn create_from_template(&mut self, name: impl Into<String>, template: &TrainingTemplate) -> &ManagedAgent {
+    pub fn create_from_template(
+        &mut self,
+        name: impl Into<String>,
+        template: &TrainingTemplate,
+    ) -> &ManagedAgent {
         let name = name.into();
         let agent = ManagedAgent::new(
             name.clone(),
@@ -159,43 +163,37 @@ impl AgentFactory {
 
     /// Create a code agent
     pub fn create_code_agent(&mut self, name: impl Into<String>) -> &ManagedAgent {
-        let template = TrainingTemplate::code_agent()
-            .with_hidden_dim(self.default_hidden_dim);
+        let template = TrainingTemplate::code_agent().with_hidden_dim(self.default_hidden_dim);
         self.create_from_template(name, &template)
     }
 
     /// Create a chat agent
     pub fn create_chat_agent(&mut self, name: impl Into<String>) -> &ManagedAgent {
-        let template = TrainingTemplate::chat_agent()
-            .with_hidden_dim(self.default_hidden_dim);
+        let template = TrainingTemplate::chat_agent().with_hidden_dim(self.default_hidden_dim);
         self.create_from_template(name, &template)
     }
 
     /// Create a RAG agent
     pub fn create_rag_agent(&mut self, name: impl Into<String>) -> &ManagedAgent {
-        let template = TrainingTemplate::rag_agent()
-            .with_hidden_dim(self.default_hidden_dim);
+        let template = TrainingTemplate::rag_agent().with_hidden_dim(self.default_hidden_dim);
         self.create_from_template(name, &template)
     }
 
     /// Create a task planner agent
     pub fn create_task_planner(&mut self, name: impl Into<String>) -> &ManagedAgent {
-        let template = TrainingTemplate::task_planner()
-            .with_hidden_dim(self.default_hidden_dim);
+        let template = TrainingTemplate::task_planner().with_hidden_dim(self.default_hidden_dim);
         self.create_from_template(name, &template)
     }
 
     /// Create a reasoning agent
     pub fn create_reasoning_agent(&mut self, name: impl Into<String>) -> &ManagedAgent {
-        let template = TrainingTemplate::reasoning_agent()
-            .with_hidden_dim(self.default_hidden_dim);
+        let template = TrainingTemplate::reasoning_agent().with_hidden_dim(self.default_hidden_dim);
         self.create_from_template(name, &template)
     }
 
     /// Create a codebase helper agent
     pub fn create_codebase_helper(&mut self, name: impl Into<String>) -> &ManagedAgent {
-        let template = TrainingTemplate::codebase_helper()
-            .with_hidden_dim(self.default_hidden_dim);
+        let template = TrainingTemplate::codebase_helper().with_hidden_dim(self.default_hidden_dim);
         self.create_from_template(name, &template)
     }
 
@@ -225,11 +223,17 @@ impl AgentFactory {
     }
 
     /// Train an agent with examples
-    pub fn train_agent<E>(&mut self, name: &str, examples: impl Iterator<Item = E>) -> Result<usize, String>
+    pub fn train_agent<E>(
+        &mut self,
+        name: &str,
+        examples: impl Iterator<Item = E>,
+    ) -> Result<usize, String>
     where
         E: TrainingExample,
     {
-        let agent = self.agents.get_mut(name)
+        let agent = self
+            .agents
+            .get_mut(name)
             .ok_or_else(|| format!("Agent '{}' not found", name))?;
 
         let mut count = 0;
@@ -248,11 +252,7 @@ impl AgentFactory {
             }
 
             // Add step with activations
-            builder.add_step(
-                example.activations(),
-                example.attention(),
-                example.reward(),
-            );
+            builder.add_step(example.activations(), example.attention(), example.reward());
 
             // End trajectory with quality
             agent.engine.end_trajectory(builder, example.quality());
@@ -470,8 +470,7 @@ mod tests {
     #[test]
     fn test_agent_from_template() {
         let mut factory = AgentFactory::with_hidden_dim(256);
-        let template = TrainingTemplate::reasoning_agent()
-            .with_hidden_dim(256);
+        let template = TrainingTemplate::reasoning_agent().with_hidden_dim(256);
 
         factory.create_from_template("reasoner", &template);
 

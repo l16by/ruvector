@@ -2,11 +2,11 @@
 //!
 //! Compares ruvector HNSW implementation against pgvector equivalents
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
-use ruvector_postgres::index::hnsw::{HnswConfig, HnswIndex};
 use ruvector_postgres::distance::DistanceMetric;
+use ruvector_postgres::index::hnsw::{HnswConfig, HnswIndex};
 
 // ============================================================================
 // Test Data Generation
@@ -15,24 +15,21 @@ use ruvector_postgres::distance::DistanceMetric;
 fn generate_random_vectors(n: usize, dims: usize, seed: u64) -> Vec<Vec<f32>> {
     let mut rng = ChaCha8Rng::seed_from_u64(seed);
     (0..n)
-        .map(|_| {
-            (0..dims)
-                .map(|_| rng.random_range(-1.0..1.0))
-                .collect()
-        })
+        .map(|_| (0..dims).map(|_| rng.random_range(-1.0..1.0)).collect())
         .collect()
 }
 
-fn generate_clustered_vectors(n: usize, dims: usize, num_clusters: usize, seed: u64) -> Vec<Vec<f32>> {
+fn generate_clustered_vectors(
+    n: usize,
+    dims: usize,
+    num_clusters: usize,
+    seed: u64,
+) -> Vec<Vec<f32>> {
     let mut rng = ChaCha8Rng::seed_from_u64(seed);
 
     // Generate cluster centers
     let centers: Vec<Vec<f32>> = (0..num_clusters)
-        .map(|_| {
-            (0..dims)
-                .map(|_| rng.random_range(-1.0..1.0))
-                .collect()
-        })
+        .map(|_| (0..dims).map(|_| rng.random_range(-1.0..1.0)).collect())
         .collect();
 
     // Generate vectors around centers
@@ -97,29 +94,25 @@ fn bench_hnsw_build_ef_construction(c: &mut Criterion) {
     let vectors = generate_random_vectors(n, dims, 42);
 
     for &ef in [16, 32, 64, 128, 256].iter() {
-        group.bench_with_input(
-            BenchmarkId::from_parameter(ef),
-            &ef,
-            |bench, &ef_val| {
-                bench.iter(|| {
-                    let config = HnswConfig {
-                        m: 16,
-                        m0: 32,
-                        ef_construction: ef_val,
-                        max_elements: n,
-                        metric: DistanceMetric::Euclidean,
-                        seed: 42,
-                        ..Default::default()
-                    };
+        group.bench_with_input(BenchmarkId::from_parameter(ef), &ef, |bench, &ef_val| {
+            bench.iter(|| {
+                let config = HnswConfig {
+                    m: 16,
+                    m0: 32,
+                    ef_construction: ef_val,
+                    max_elements: n,
+                    metric: DistanceMetric::Euclidean,
+                    seed: 42,
+                    ..Default::default()
+                };
 
-                    let mut index = HnswIndex::new(config);
-                    for (id, vec) in vectors.iter().enumerate() {
-                        index.insert(id as u64, vec);
-                    }
-                    black_box(index)
-                });
-            },
-        );
+                let mut index = HnswIndex::new(config);
+                for (id, vec) in vectors.iter().enumerate() {
+                    index.insert(id as u64, vec);
+                }
+                black_box(index)
+            });
+        });
     }
 
     group.finish();
@@ -134,29 +127,25 @@ fn bench_hnsw_build_m_parameter(c: &mut Criterion) {
     let vectors = generate_random_vectors(n, dims, 42);
 
     for &m in [8, 12, 16, 24, 32, 48].iter() {
-        group.bench_with_input(
-            BenchmarkId::from_parameter(m),
-            &m,
-            |bench, &m_val| {
-                bench.iter(|| {
-                    let config = HnswConfig {
-                        m: m_val,
-                        m0: m_val * 2,
-                        ef_construction: 64,
-                        max_elements: n,
-                        metric: DistanceMetric::Euclidean,
-                        seed: 42,
-                        ..Default::default()
-                    };
+        group.bench_with_input(BenchmarkId::from_parameter(m), &m, |bench, &m_val| {
+            bench.iter(|| {
+                let config = HnswConfig {
+                    m: m_val,
+                    m0: m_val * 2,
+                    ef_construction: 64,
+                    max_elements: n,
+                    metric: DistanceMetric::Euclidean,
+                    seed: 42,
+                    ..Default::default()
+                };
 
-                    let mut index = HnswIndex::new(config);
-                    for (id, vec) in vectors.iter().enumerate() {
-                        index.insert(id as u64, vec);
-                    }
-                    black_box(index)
-                });
-            },
-        );
+                let mut index = HnswIndex::new(config);
+                for (id, vec) in vectors.iter().enumerate() {
+                    index.insert(id as u64, vec);
+                }
+                black_box(index)
+            });
+        });
     }
 
     group.finish();
@@ -194,9 +183,7 @@ fn bench_hnsw_search(c: &mut Criterion) {
                 BenchmarkId::new(format!("{}d", dims), n),
                 &(&index, &query),
                 |bench, (idx, q)| {
-                    bench.iter(|| {
-                        black_box(idx.search(q, 10))
-                    });
+                    bench.iter(|| black_box(idx.search(q, 10)));
                 },
             );
         }
@@ -231,17 +218,13 @@ fn bench_hnsw_search_ef_values(c: &mut Criterion) {
     }
 
     for &ef in [10, 20, 40, 80, 160, 320].iter() {
-        group.bench_with_input(
-            BenchmarkId::from_parameter(ef),
-            &ef,
-            |bench, &ef_val| {
-                bench.iter(|| {
-                    for query in &queries {
-                        black_box(index.search_with_ef(query, 10, ef_val));
-                    }
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::from_parameter(ef), &ef, |bench, &ef_val| {
+            bench.iter(|| {
+                for query in &queries {
+                    black_box(index.search_with_ef(query, 10, ef_val));
+                }
+            });
+        });
     }
 
     group.finish();
@@ -272,15 +255,9 @@ fn bench_hnsw_search_k_values(c: &mut Criterion) {
     }
 
     for &k in [1, 5, 10, 20, 50, 100].iter() {
-        group.bench_with_input(
-            BenchmarkId::from_parameter(k),
-            &k,
-            |bench, &k_val| {
-                bench.iter(|| {
-                    black_box(index.search(&query, k_val))
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::from_parameter(k), &k, |bench, &k_val| {
+            bench.iter(|| black_box(index.search(&query, k_val)));
+        });
     }
 
     group.finish();
@@ -337,27 +314,23 @@ fn bench_hnsw_recall(c: &mut Criterion) {
     };
 
     for &ef in [10, 20, 40, 80, 160].iter() {
-        group.bench_with_input(
-            BenchmarkId::new("recall@10", ef),
-            &ef,
-            |bench, &ef_val| {
-                bench.iter(|| {
-                    let mut total_recall = 0.0;
-                    for query in &queries {
-                        let ground_truth = compute_ground_truth(query, 10);
-                        let results = index.search_with_ef(query, 10, ef_val);
+        group.bench_with_input(BenchmarkId::new("recall@10", ef), &ef, |bench, &ef_val| {
+            bench.iter(|| {
+                let mut total_recall = 0.0;
+                for query in &queries {
+                    let ground_truth = compute_ground_truth(query, 10);
+                    let results = index.search_with_ef(query, 10, ef_val);
 
-                        let hits = results
-                            .iter()
-                            .filter(|r| ground_truth.contains(&r.id))
-                            .count();
+                    let hits = results
+                        .iter()
+                        .filter(|r| ground_truth.contains(&r.id))
+                        .count();
 
-                        total_recall += hits as f32 / 10.0;
-                    }
-                    black_box(total_recall / queries.len() as f32)
-                });
-            },
-        );
+                    total_recall += hits as f32 / 10.0;
+                }
+                black_box(total_recall / queries.len() as f32)
+            });
+        });
     }
 
     group.finish();
@@ -451,9 +424,7 @@ fn bench_hnsw_distance_metrics(c: &mut Criterion) {
             BenchmarkId::new("search", metric_name),
             &(&index, &query),
             |bench, (idx, q)| {
-                bench.iter(|| {
-                    black_box(idx.search(q, 10))
-                });
+                bench.iter(|| black_box(idx.search(q, 10)));
             },
         );
     }

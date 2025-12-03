@@ -93,9 +93,13 @@ impl Optimizer {
         }
 
         match (&self.optimizer_type, &mut self.state) {
-            (OptimizerType::Sgd { learning_rate, momentum }, OptimizerState::Sgd { velocity }) => {
-                Self::sgd_step_with_momentum(params, grads, *learning_rate, *momentum, velocity)
-            }
+            (
+                OptimizerType::Sgd {
+                    learning_rate,
+                    momentum,
+                },
+                OptimizerState::Sgd { velocity },
+            ) => Self::sgd_step_with_momentum(params, grads, *learning_rate, *momentum, velocity),
             (
                 OptimizerType::Adam {
                     learning_rate,
@@ -104,12 +108,18 @@ impl Optimizer {
                     epsilon,
                 },
                 OptimizerState::Adam { m, v, t },
-            ) => Self::adam_step(params, grads, *learning_rate, *beta1, *beta2, *epsilon, m, v, t),
-            _ => {
-                return Err(GnnError::invalid_input(
-                    "Optimizer type and state mismatch",
-                ))
-            }
+            ) => Self::adam_step(
+                params,
+                grads,
+                *learning_rate,
+                *beta1,
+                *beta2,
+                *epsilon,
+                m,
+                v,
+                t,
+            ),
+            _ => return Err(GnnError::invalid_input("Optimizer type and state mismatch")),
         }
     }
 
@@ -203,9 +213,10 @@ impl Optimizer {
 
             // Update parameters
             // params = params - lr * m_hat / (sqrt(v_hat) + epsilon)
-            let update = m_hat.iter().zip(v_hat.iter()).map(|(&m_val, &v_val)| {
-                learning_rate * m_val / (v_val.sqrt() + epsilon)
-            });
+            let update = m_hat
+                .iter()
+                .zip(v_hat.iter())
+                .map(|(&m_val, &v_val)| learning_rate * m_val / (v_val.sqrt() + epsilon));
 
             for (param, upd) in params.iter_mut().zip(update) {
                 *param -= upd;

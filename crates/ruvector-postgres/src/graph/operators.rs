@@ -5,9 +5,9 @@ use pgrx::JsonB;
 use serde_json::{json, Value as JsonValue};
 use std::collections::HashMap;
 
-use super::{get_or_create_graph, get_graph};
 use super::cypher::query as cypher_query;
 use super::traversal::{bfs, shortest_path_dijkstra};
+use super::{get_graph, get_or_create_graph};
 
 /// Create a new graph
 ///
@@ -29,13 +29,9 @@ fn ruvector_create_graph(name: &str) -> bool {
 /// SELECT ruvector_cypher('my_graph', 'MATCH (n:Person) WHERE n.name = $name RETURN n', '{"name": "Alice"}');
 /// ```
 #[pg_extern]
-fn ruvector_cypher(
-    graph_name: &str,
-    query: &str,
-    params: Option<JsonB>,
-) -> Result<JsonB, String> {
-    let graph = get_graph(graph_name)
-        .ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
+fn ruvector_cypher(graph_name: &str, query: &str, params: Option<JsonB>) -> Result<JsonB, String> {
+    let graph =
+        get_graph(graph_name).ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
 
     let params_json = params.map(|p| p.0);
 
@@ -57,15 +53,15 @@ fn ruvector_shortest_path(
     end_id: i64,
     max_hops: i32,
 ) -> Result<JsonB, String> {
-    let graph = get_graph(graph_name)
-        .ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
+    let graph =
+        get_graph(graph_name).ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
 
     let start = start_id as u64;
     let end = end_id as u64;
     let max_hops = max_hops as usize;
 
-    let path = bfs(&graph, start, end, None, max_hops)
-        .ok_or_else(|| "No path found".to_string())?;
+    let path =
+        bfs(&graph, start, end, None, max_hops).ok_or_else(|| "No path found".to_string())?;
 
     let result = json!({
         "nodes": path.nodes,
@@ -90,8 +86,8 @@ fn ruvector_shortest_path_weighted(
     end_id: i64,
     weight_property: &str,
 ) -> Result<JsonB, String> {
-    let graph = get_graph(graph_name)
-        .ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
+    let graph =
+        get_graph(graph_name).ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
 
     let start = start_id as u64;
     let end = end_id as u64;
@@ -117,8 +113,8 @@ fn ruvector_shortest_path_weighted(
 /// ```
 #[pg_extern]
 fn ruvector_graph_stats(graph_name: &str) -> Result<JsonB, String> {
-    let graph = get_graph(graph_name)
-        .ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
+    let graph =
+        get_graph(graph_name).ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
 
     let stats = graph.stats();
 
@@ -148,9 +144,7 @@ fn ruvector_add_node(
     let graph = get_or_create_graph(graph_name);
 
     let props = if let JsonValue::Object(map) = properties.0 {
-        map.into_iter()
-            .map(|(k, v)| (k, v))
-            .collect()
+        map.into_iter().map(|(k, v)| (k, v)).collect()
     } else {
         HashMap::new()
     };
@@ -174,13 +168,11 @@ fn ruvector_add_edge(
     edge_type: &str,
     properties: JsonB,
 ) -> Result<i64, String> {
-    let graph = get_graph(graph_name)
-        .ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
+    let graph =
+        get_graph(graph_name).ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
 
     let props = if let JsonValue::Object(map) = properties.0 {
-        map.into_iter()
-            .map(|(k, v)| (k, v))
-            .collect()
+        map.into_iter().map(|(k, v)| (k, v)).collect()
     } else {
         HashMap::new()
     };
@@ -202,16 +194,13 @@ fn ruvector_add_edge(
 /// SELECT ruvector_get_node('my_graph', 1);
 /// ```
 #[pg_extern]
-fn ruvector_get_node(
-    graph_name: &str,
-    node_id: i64,
-) -> Result<Option<JsonB>, String> {
-    let graph = get_graph(graph_name)
-        .ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
+fn ruvector_get_node(graph_name: &str, node_id: i64) -> Result<Option<JsonB>, String> {
+    let graph =
+        get_graph(graph_name).ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
 
     if let Some(node) = graph.nodes.get(node_id as u64) {
-        let json = serde_json::to_value(&node)
-            .map_err(|e| format!("Serialization error: {}", e))?;
+        let json =
+            serde_json::to_value(&node).map_err(|e| format!("Serialization error: {}", e))?;
         Ok(Some(JsonB(json)))
     } else {
         Ok(None)
@@ -225,16 +214,13 @@ fn ruvector_get_node(
 /// SELECT ruvector_get_edge('my_graph', 1);
 /// ```
 #[pg_extern]
-fn ruvector_get_edge(
-    graph_name: &str,
-    edge_id: i64,
-) -> Result<Option<JsonB>, String> {
-    let graph = get_graph(graph_name)
-        .ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
+fn ruvector_get_edge(graph_name: &str, edge_id: i64) -> Result<Option<JsonB>, String> {
+    let graph =
+        get_graph(graph_name).ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
 
     if let Some(edge) = graph.edges.get(edge_id as u64) {
-        let json = serde_json::to_value(&edge)
-            .map_err(|e| format!("Serialization error: {}", e))?;
+        let json =
+            serde_json::to_value(&edge).map_err(|e| format!("Serialization error: {}", e))?;
         Ok(Some(JsonB(json)))
     } else {
         Ok(None)
@@ -248,17 +234,13 @@ fn ruvector_get_edge(
 /// SELECT ruvector_find_nodes_by_label('my_graph', 'Person');
 /// ```
 #[pg_extern]
-fn ruvector_find_nodes_by_label(
-    graph_name: &str,
-    label: &str,
-) -> Result<JsonB, String> {
-    let graph = get_graph(graph_name)
-        .ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
+fn ruvector_find_nodes_by_label(graph_name: &str, label: &str) -> Result<JsonB, String> {
+    let graph =
+        get_graph(graph_name).ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
 
     let nodes = graph.nodes.find_by_label(label);
 
-    let json = serde_json::to_value(&nodes)
-        .map_err(|e| format!("Serialization error: {}", e))?;
+    let json = serde_json::to_value(&nodes).map_err(|e| format!("Serialization error: {}", e))?;
 
     Ok(JsonB(json))
 }
@@ -270,12 +252,9 @@ fn ruvector_find_nodes_by_label(
 /// SELECT ruvector_get_neighbors('my_graph', 1);
 /// ```
 #[pg_extern]
-fn ruvector_get_neighbors(
-    graph_name: &str,
-    node_id: i64,
-) -> Result<Vec<i64>, String> {
-    let graph = get_graph(graph_name)
-        .ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
+fn ruvector_get_neighbors(graph_name: &str, node_id: i64) -> Result<Vec<i64>, String> {
+    let graph =
+        get_graph(graph_name).ok_or_else(|| format!("Graph '{}' does not exist", graph_name))?;
 
     let neighbors = graph.edges.get_neighbors(node_id as u64);
 
@@ -329,13 +308,15 @@ mod tests {
             "test_graph",
             vec!["Person".to_string()],
             JsonB(json!({"name": "Alice"})),
-        ).unwrap();
+        )
+        .unwrap();
 
         let node2 = ruvector_add_node(
             "test_graph",
             vec!["Person".to_string()],
             JsonB(json!({"name": "Bob"})),
-        ).unwrap();
+        )
+        .unwrap();
 
         let edge = ruvector_add_edge(
             "test_graph",
@@ -343,7 +324,8 @@ mod tests {
             node2,
             "KNOWS",
             JsonB(json!({"since": 2020})),
-        ).unwrap();
+        )
+        .unwrap();
 
         assert!(edge > 0);
 
@@ -382,23 +364,11 @@ mod tests {
     fn test_shortest_path() {
         ruvector_create_graph("test_graph");
 
-        let n1 = ruvector_add_node(
-            "test_graph",
-            vec![],
-            JsonB(json!({})),
-        ).unwrap();
+        let n1 = ruvector_add_node("test_graph", vec![], JsonB(json!({}))).unwrap();
 
-        let n2 = ruvector_add_node(
-            "test_graph",
-            vec![],
-            JsonB(json!({})),
-        ).unwrap();
+        let n2 = ruvector_add_node("test_graph", vec![], JsonB(json!({}))).unwrap();
 
-        let n3 = ruvector_add_node(
-            "test_graph",
-            vec![],
-            JsonB(json!({})),
-        ).unwrap();
+        let n3 = ruvector_add_node("test_graph", vec![], JsonB(json!({}))).unwrap();
 
         ruvector_add_edge("test_graph", n1, n2, "KNOWS", JsonB(json!({}))).unwrap();
         ruvector_add_edge("test_graph", n2, n3, "KNOWS", JsonB(json!({}))).unwrap();
@@ -418,7 +388,8 @@ mod tests {
             "test_graph",
             vec!["Person".to_string()],
             JsonB(json!({"name": "Alice"})),
-        ).unwrap();
+        )
+        .unwrap();
 
         let stats = ruvector_graph_stats("test_graph").unwrap();
         let stats_obj = stats.0.as_object().unwrap();
@@ -440,13 +411,15 @@ mod tests {
             "test_graph",
             vec!["Person".to_string()],
             JsonB(json!({"name": "Alice"})),
-        ).unwrap();
+        )
+        .unwrap();
 
         ruvector_add_node(
             "test_graph",
             vec!["Person".to_string()],
             JsonB(json!({"name": "Bob"})),
-        ).unwrap();
+        )
+        .unwrap();
 
         let nodes = ruvector_find_nodes_by_label("test_graph", "Person").unwrap();
         let nodes_array = nodes.0.as_array().unwrap();

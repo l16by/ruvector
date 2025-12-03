@@ -1480,7 +1480,12 @@ mod tests {
         let scalar = scalar::euclidean_distance(&a, &b);
         let simd = euclidean_distance_avx2_wrapper(&a, &b);
 
-        assert!((scalar - simd).abs() < 1e-4, "scalar={}, simd={}", scalar, simd);
+        assert!(
+            (scalar - simd).abs() < 1e-4,
+            "scalar={}, simd={}",
+            scalar,
+            simd
+        );
     }
 
     #[test]
@@ -1491,7 +1496,12 @@ mod tests {
         let scalar = scalar::cosine_distance(&a, &b);
         let simd = cosine_distance_avx2_wrapper(&a, &b);
 
-        assert!((scalar - simd).abs() < 1e-4, "scalar={}, simd={}", scalar, simd);
+        assert!(
+            (scalar - simd).abs() < 1e-4,
+            "scalar={}, simd={}",
+            scalar,
+            simd
+        );
     }
 
     #[test]
@@ -1502,7 +1512,12 @@ mod tests {
         let scalar = scalar::inner_product_distance(&a, &b);
         let simd = inner_product_avx2_wrapper(&a, &b);
 
-        assert!((scalar - simd).abs() < 1e-3, "scalar={}, simd={}", scalar, simd);
+        assert!(
+            (scalar - simd).abs() < 1e-3,
+            "scalar={}, simd={}",
+            scalar,
+            simd
+        );
     }
 
     #[test]
@@ -1513,7 +1528,12 @@ mod tests {
         let scalar = scalar::manhattan_distance(&a, &b);
         let simd = manhattan_distance_avx2_wrapper(&a, &b);
 
-        assert!((scalar - simd).abs() < 1e-4, "scalar={}, simd={}", scalar, simd);
+        assert!(
+            (scalar - simd).abs() < 1e-4,
+            "scalar={}, simd={}",
+            scalar,
+            simd
+        );
     }
 
     #[test]
@@ -1560,7 +1580,11 @@ mod tests {
         let b: Vec<f32> = vec![4.0, 5.0, 6.0];
 
         let dist = unsafe { inner_product_ptr(a.as_ptr(), b.as_ptr(), a.len()) };
-        assert!((dist - (-32.0)).abs() < 1e-5, "Expected -32.0, got {}", dist);
+        assert!(
+            (dist - (-32.0)).abs() < 1e-5,
+            "Expected -32.0, got {}",
+            dist
+        );
     }
 
     #[test]
@@ -1590,7 +1614,12 @@ mod tests {
         let scalar = scalar::euclidean_distance(&a, &b);
         let simd = unsafe { l2_distance_ptr_avx512(a.as_ptr(), b.as_ptr(), a.len()) };
 
-        assert!((scalar - simd).abs() < 1e-3, "scalar={}, simd={}", scalar, simd);
+        assert!(
+            (scalar - simd).abs() < 1e-3,
+            "scalar={}, simd={}",
+            scalar,
+            simd
+        );
     }
 
     #[test]
@@ -1607,7 +1636,12 @@ mod tests {
         let scalar = scalar::cosine_distance(&a, &b);
         let simd = unsafe { cosine_distance_ptr_avx512(a.as_ptr(), b.as_ptr(), a.len()) };
 
-        assert!((scalar - simd).abs() < 1e-4, "scalar={}, simd={}", scalar, simd);
+        assert!(
+            (scalar - simd).abs() < 1e-4,
+            "scalar={}, simd={}",
+            scalar,
+            simd
+        );
     }
 
     #[test]
@@ -1624,7 +1658,12 @@ mod tests {
         let scalar = scalar::inner_product_distance(&a, &b);
         let simd = unsafe { inner_product_ptr_avx512(a.as_ptr(), b.as_ptr(), a.len()) };
 
-        assert!((scalar - simd).abs() < 1e-2, "scalar={}, simd={}", scalar, simd);
+        assert!(
+            (scalar - simd).abs() < 1e-2,
+            "scalar={}, simd={}",
+            scalar,
+            simd
+        );
     }
 
     #[test]
@@ -1641,7 +1680,12 @@ mod tests {
         let scalar = scalar::manhattan_distance(&a, &b);
         let simd = unsafe { manhattan_distance_ptr_avx512(a.as_ptr(), b.as_ptr(), a.len()) };
 
-        assert!((scalar - simd).abs() < 1e-4, "scalar={}, simd={}", scalar, simd);
+        assert!(
+            (scalar - simd).abs() < 1e-4,
+            "scalar={}, simd={}",
+            scalar,
+            simd
+        );
     }
 
     #[test]
@@ -1675,7 +1719,8 @@ mod tests {
         let level = simd_level();
         assert!(
             level == "AVX-512" || level == "AVX2" || level == "NEON" || level == "Scalar",
-            "Unexpected SIMD level: {}", level
+            "Unexpected SIMD level: {}",
+            level
         );
         println!("Detected SIMD level: {}", level);
     }
