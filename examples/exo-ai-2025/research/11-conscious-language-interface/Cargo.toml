@@ -1,0 +1,34 @@
+[package]
+name = "conscious-language-interface"
+version = "0.1.0"
+edition = "2021"
+description = "Integration of ruvLLM + Neuromorphic Spiking + ruvector for conscious AI with natural language"
+authors = ["AI Research Team"]
+license = "MIT"
+repository = "https://github.com/ruvnet/ruvector"
+keywords = ["consciousness", "llm", "neuromorphic", "spiking-neural-networks", "ai"]
+categories = ["science", "simulation"]
+
+[dependencies]
+# Would depend on actual crates when integrated
+# ruvllm = { path = "../../../../examples/ruvLLM" }
+# sona = { path = "../../../../crates/sona" }
+# ruvector-core = { path = "../../../../crates/ruvector-core" }
+
+[dev-dependencies]
+
+[features]
+default = []
+simd = []  # SIMD acceleration
+cuda = []  # GPU acceleration
+full-consciousness = []  # Enable all consciousness features
+
+[[bin]]
+name = "cli-demo"
+path = "src/bin/demo.rs"
+required-features = []
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
